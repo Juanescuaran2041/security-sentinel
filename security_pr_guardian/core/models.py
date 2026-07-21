@@ -90,6 +90,9 @@ class LogEvent (BaseModel):
     duration_ms: int | None = None   # solo para operaciones con inicio y fin medibles
     details: dict[str, Any] = Field(default_factory=dict)
 
+class StaticAnalysisResult (BaseModel):
+    findings: list[CandidateFinding] = Field(default_factory=list)
+    partial_erros: list[dict[str, str]] = Field(default_factory=list) #Diccionario con 2 campos
 
 class AppConfig (BaseSettings):
     github_token:str
