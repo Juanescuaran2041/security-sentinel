@@ -33,22 +33,22 @@ class StructuredLogger:
 
     def log(
         self,
-        component: str,
-        event: str,
-        duration_ms: int | None = None,
-        **details: Any,
+        componente: str,
+        evento: str,
+        duracion_ms: int | None = None,
+        **detalle: Any,
     ) -> LogEvent:
         """Construct, validate, and emit a structured log event.
 
         Parameters
         ----------
-        component : str
+        componente : str
             Which component emitted the event (e.g. "Static_Analyzer").
-        event : str
+        evento : str
             What happened (e.g. "analysis_started").
-        duration_ms : int | None
+        duracion_ms : int | None
             Elapsed milliseconds for timed operations. Omit for non-timed events.
-        **details : Any
+        **detalle : Any
             Arbitrary key-value pairs providing additional context.
 
         Returns
@@ -58,10 +58,10 @@ class StructuredLogger:
         """
         log_event = LogEvent(
             analysis_id=self._analysis_id,
-            component=component,
-            event=event,
-            duration_ms=duration_ms,
-            details=details,
+            componente=componente,
+            evento=evento,
+            duracion_ms=duracion_ms,
+            detalle=detalle,
         )
 
         # Serialize to JSON line; exclude None fields to keep output clean

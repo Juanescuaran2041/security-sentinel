@@ -34,6 +34,18 @@
         "chatSessionId": "sess_e97853e3-a3f3-4276-a062-87edb9adcfc8",
         "timestamp": 1784681998155
       }
+    ],
+    "1.2 Crear los modelos Pydantic en `security_pr_guardian/core/models.py` (`Severity`, `CandidateFinding`, `LLMVerdict`, `Recommendation`, `ConfirmedFinding`, `KBFragment`, `AnalysisResult`, `DependencyChange`, `LogEvent`, `AppConfig`)": [
+      {
+        "executionId": "1ff39e29-6952-4fb1-97c4-658839242f5b",
+        "chatSessionId": "sess_e94a037c-77a9-4ac5-b335-4ddc6ecfcd43",
+        "timestamp": 1784687320088
+      },
+      {
+        "executionId": "1ff39e29-6952-4fb1-97c4-658839242f5b",
+        "chatSessionId": "sess_e94a037c-77a9-4ac5-b335-4ddc6ecfcd43",
+        "timestamp": 1784687935329
+      }
     ]
   }
 }
