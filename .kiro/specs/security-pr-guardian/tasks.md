@@ -26,7 +26,7 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
     - Validates: Requirements 2.2
 
 - [ ] 3. CVE_Lookup — servidor MCP y adaptador
-  - [ ] 3.1 Implementar el servidor FastMCP `cve_lookup_server.py` que expone `lookup_cve(package: str, version: str, ecosystem: str) -> list[CVEFinding] | ErrorFinding` llamando a `POST https://api.osv.dev/v1/querybatch`; reintentos: 2 intentos adicionales, espera fija de 3 s; `error_lookup` en fallo definitivo; `error_input` si `version` está vacía
+  - [-] 3.1 Implementar el servidor FastMCP `cve_lookup_server.py` que expone `lookup_cve(package: str, version: str, ecosystem: str) -> list[CVEFinding] | ErrorFinding` llamando a `POST https://api.osv.dev/v1/querybatch`; reintentos: 2 intentos adicionales, espera fija de 3 s; `error_lookup` en fallo definitivo; `error_input` si `version` está vacía
   - [ ] 3.2 Implementar `CVELookupMCPAdapter` en `adapters/mcp/cve_lookup_adapter.py` implementando `CVELookupPort`; aplicar el límite de 50 dependencias (primeras 50 por orden de aparición); emitir finding `limit_exceeded` con conteo de omitidas cuando se supere el límite
   - [ ] 3.3 Escribir tests unitarios del adaptador CVE: `error_lookup` tras reintentos agotados (mockeado con `pytest-httpx`), `limit_exceeded` al pasar la dependencia 51, `error_input` cuando `version` está vacía, lista vacía cuando OSV no retorna vulnerabilidades
   - [ ] 3.4 Escribir test de contrato MCP para `lookup_cve`: input `{"package": str, "version": str, "ecosystem": str}` → output coincide con el schema de lista `CVEFinding`

@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "enabled": true,
+  "name": "Correr tests al guardar código",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "security_pr_guardian/**/*.py"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "pytest -q --no-header"
+  },
+  "workspaceFolderName": "security-sentinel",
+  "shortName": "correr-tests-al-guardar-codigo"
+}

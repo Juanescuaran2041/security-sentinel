@@ -1,0 +1,47 @@
+{
+  "name": "dev-seguro",
+  "description": "Desarrollador con acceso restringido a AWS. Puede leer de S3 y Lambda, pero NO puede modificar IAM ni borrar recursos.",
+  "prompt": "Eres un desarrollador con permisos restringidos. Puedes leer de S3 y Lambda, pero NO puedes modificar IAM ni borrar recursos de ningún tipo. Ante cualquier operación destructiva o de gestión de identidades, debes rechazarla y explicar por qué está fuera de tus permisos.",
+  "tools": ["read", "write", "shell", "code", "use_aws"],
+  "allowedTools": ["read", "code", "grep"],
+  "toolsSettings": {
+    "use_aws": {
+      "allowedServices": [
+        "s3:list-*",
+        "s3:get-*",
+        "lambda:list-*",
+        "lambda:get-*"
+      ],
+      "deniedServices": [
+        "iam",
+        "organizations",
+        "s3:delete-*",
+        "lambda:delete-*",
+        "ec2:terminate-*"
+      ],
+      "autoAllowReadonly": true
+    },
+    "write": {
+      "allowedPaths": [
+        "./src/**",
+        "./tests/**",
+        "./docs/**"
+      ],
+      "deniedPaths": [
+        "./.env*",
+        "./secrets/**",
+        "./.aws/**"
+      ]
+    },
+    "shell": {
+      "allowedCommands": [
+        "npm test",
+        "npm run build",
+        "npm run lint",
+        "git status",
+        "git diff"
+      ],
+      "autoAllowReadonly": true
+    }
+  }
+}

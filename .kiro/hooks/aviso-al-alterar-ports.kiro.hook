@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "enabled": true,
+  "name": "Aviso al alterar ports",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "security_pr_guardian/ports/**/*.py"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "echo \"Se modifico un port. Verifica que ningun adapter existente quedo con firma desactualizada.\""
+  }
+}
