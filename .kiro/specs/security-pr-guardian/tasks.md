@@ -9,10 +9,10 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
 ## Tasks
 
 - [ ] 1. Estructura del proyecto y modelos de dominio
-  - [ ] 1.1 Inicializar la estructura de paquete Python (`pyproject.toml`, `setup.cfg`, `requirements.txt` con dependencias pinned)
+  - [x] 1.1 Inicializar la estructura de paquete Python (`pyproject.toml`, `setup.cfg`, `requirements.txt` con dependencias pinned)
   - [ ] 1.2 Crear los modelos Pydantic en `security_pr_guardian/core/models.py` (`Severity`, `CandidateFinding`, `LLMVerdict`, `Recommendation`, `ConfirmedFinding`, `KBFragment`, `AnalysisResult`, `DependencyChange`, `LogEvent`, `AppConfig`)
   - [ ] 1.3 Definir los puertos (ABCs) en `security_pr_guardian/ports/` (`DiffExtractionPort`, `StaticAnalysisPort`, `CVELookupPort`, `KBRetrievalPort`, `LLMReasoningPort`, `PRCommentPort`)
-  - [ ] 1.4 Implementar `StructuredLogger` en `security_pr_guardian/core/logger.py` con emisión de eventos de log JSON con los campos `timestamp`, `analysis_id`, `componente`, `evento`, `duracion_ms` (opcional) y `detalle`
+  - [x] 1.4 Implementar `StructuredLogger` en `security_pr_guardian/core/logger.py` con emisión de eventos de log JSON con los campos `timestamp`, `analysis_id`, `componente`, `evento`, `duracion_ms` (opcional) y `detalle`
   - [ ] 1.5 Escribir tests unitarios para los modelos y para la validación de `AppConfig` (variables obligatorias ausentes, valores fuera de rango, merge env vars vs `config.yaml`)
 
 - [ ] 2. Static_Analyzer — servidor MCP y adaptador

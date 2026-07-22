@@ -1,0 +1,39 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Inicializar la estructura de paquete Python (`pyproject.toml`, `setup.cfg`, `requirements.txt` con dependencias pinned)": [
+      {
+        "executionId": "3adc460a-8c81-4230-8557-31668629eaf3",
+        "chatSessionId": "sess_84cd432d-a572-411e-8c00-9c72caaff8c6",
+        "timestamp": 1784681220806
+      },
+      {
+        "executionId": "3adc460a-8c81-4230-8557-31668629eaf3",
+        "chatSessionId": "sess_84cd432d-a572-411e-8c00-9c72caaff8c6",
+        "timestamp": 1784681378052
+      },
+      {
+        "executionId": "f8cdcf3b-93d1-45af-a144-66ace9141d68",
+        "chatSessionId": "sess_bea1050c-9b21-47c4-bd76-75f07d869226",
+        "timestamp": 1784682048665
+      },
+      {
+        "executionId": "f8cdcf3b-93d1-45af-a144-66ace9141d68",
+        "chatSessionId": "sess_bea1050c-9b21-47c4-bd76-75f07d869226",
+        "timestamp": 1784682581272
+      }
+    ],
+    "1.4 Implementar `StructuredLogger` en `security_pr_guardian/core/logger.py` con emisión de eventos de log JSON con los campos `timestamp`, `analysis_id`, `componente`, `evento`, `duracion_ms` (opcional) y `detalle`": [
+      {
+        "executionId": "1a5afc80-a32e-42ea-a7b1-8cd433257e35",
+        "chatSessionId": "sess_e97853e3-a3f3-4276-a062-87edb9adcfc8",
+        "timestamp": 1784681478737
+      },
+      {
+        "executionId": "1a5afc80-a32e-42ea-a7b1-8cd433257e35",
+        "chatSessionId": "sess_e97853e3-a3f3-4276-a062-87edb9adcfc8",
+        "timestamp": 1784681998155
+      }
+    ]
+  }
+}

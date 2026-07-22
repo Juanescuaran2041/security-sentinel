@@ -107,7 +107,7 @@ class AppConfig (BaseSettings):
     )
 
     @model_validator(mode="after")
-    def validate_credentials_backend(self) -> AppConfig:
+    def validate_credentials_backend(self) -> "AppConfig":
         if self.llm_backend == "bedrock":
             if not self.bedrock_model or not self.bedrock_region:
                 raise ValueError("Error se debe incluir la region y el modelo de bedrock")
