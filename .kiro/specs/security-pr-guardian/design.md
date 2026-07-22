@@ -1,6 +1,6 @@
 # Documento de Diseño — Security PR Guardian
 
-> **Nota de versión**: este documento reemplaza el diseño anterior basado en webhook + servidor FastAPI. La lógica de dominio es idéntica (extracción → SAST + CVE → razonamiento LLM con RAG → reporte), pero el punto de entrada cambió de un evento HTTP a un comando de terminal. El sistema ahora es una **herramienta CLI stateless** — sin proceso persistente, sin webhook escuchando.
+> **Nota de versión**: La lógica de dominio es idéntica (extracción → SAST + CVE → razonamiento LLM con RAG → reporte), pero el punto de entrada cambió de un evento HTTP a un comando de terminal. El sistema ahora es una **herramienta CLI stateless** — sin proceso persistente, sin webhook escuchando.
 
 ## Overview
 
