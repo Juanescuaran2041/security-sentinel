@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 
 from security_pr_guardian.core.models import LLMVeredict, KBFragment, CandidateFinding
+from security_pr_guardian.core.exceptions import LLMEValidationError
 
 class LLMReasoningPort(ABC):
 
     @abstractmethod
-    def solve(self, findings: CandidateFinding, fragments:list[KBFragment]) -> LLMVeredict:
+    async def solve(self, findings: CandidateFinding, fragments:list[KBFragment]) -> LLMVeredict:
         """Evalúa si el finding es explotable en su contexto real.
 
         Nota: el manejo de "no_evaluado" (JSON inválido / campos faltantes /
@@ -15,5 +16,7 @@ class LLMReasoningPort(ABC):
         BedrockAdapter y AnthropicAdapter.
         """
         raise NotImplementedError
+
+    
 
 
