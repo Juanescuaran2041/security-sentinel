@@ -1,0 +1,72 @@
+diff --git a/app/data/loader.py b/app/data/loader.py
+--- a/app/data/loader.py
++++ b/app/data/loader.py
+@@ -1,6 +1,38 @@
+-import json
++import json
++import pickle
++import yaml
++import marshal
+ 
+ 
+ def load_config(path: str) -> dict:
+-    with open(path) as f:
+-        return json.load(f)
++    """Load config — vulnerable via yaml.load without Loader."""
++    with open(path) as f:
++        return yaml.load(f.read())
++
++
++def load_session(data: bytes):
++    """Load session — vulnerable via pickle.loads."""
++    return pickle.loads(data)
++
++
++def load_cached_object(filepath: str):
++    """Load cached object — vulnerable via pickle.load."""
++    with open(filepath, "rb") as f:
++        return pickle.load(f)
++
++
++def execute_dynamic_code(code_string: str):
++    """Execute dynamic code — vulnerable via eval."""
++    result = eval(code_string)
++    return result
++
++
++def load_binary_data(raw_bytes: bytes):
++    """Load binary — vulnerable via marshal.loads."""
++    return marshal.loads(raw_bytes)
++
++
++def load_unsafe_yaml(stream):
++    """Load YAML — vulnerable via yaml.unsafe_load."""
++    return yaml.unsafe_load(stream)
+diff --git a/app/api/import_handler.py b/app/api/import_handler.py
+--- /dev/null
++++ b/app/api/import_handler.py
+@@ -0,0 +1,25 @@
++"""Import handler with multiple deserialization vulnerabilities."""
++import pickle
++import shelve
++import jsonpickle
++
++
++def import_user_data(serialized: bytes):
++    """Import from client — vulnerable via pickle.loads."""
++    user_data = pickle.loads(serialized)
++    return user_data
++
++
++def load_legacy_store(db_path: str):
++    """Load legacy data — vulnerable via shelve.open."""
++    db = shelve.open(db_path)
++    data = dict(db)
++    db.close()
++    return data
++
++
++def deserialize_payload(payload_str: str):
++    """Deserialize API payload — vulnerable via jsonpickle.decode."""
++    obj = jsonpickle.decode(payload_str)
++    return obj

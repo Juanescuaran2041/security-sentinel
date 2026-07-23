@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Recordatorio de tests antes de empezar una tarea",
+      "trigger": "PreTaskExec",
+      "description": "Recuerda escribir tests unitarios/propiedad antes de dar por completada una tarea",
+      "action": {
+        "type": "agent",
+        "prompt": "Antes de dar por completada esta tarea, confirma que vas a escribir los tests unitarios/propiedad correspondientes según tasks.md, no solo el código de producción."
+      }
+    }
+  ]
+}

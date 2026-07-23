@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Correr tests al guardar código",
+      "trigger": "PostFileSave",
+      "description": "Ejecuta pytest automáticamente cuando se guarda un archivo .py del proyecto",
+      "matcher": "\\.py$",
+      "action": {
+        "type": "command",
+        "command": "python -m pytest -q --no-header"
+      }
+    }
+  ]
+}

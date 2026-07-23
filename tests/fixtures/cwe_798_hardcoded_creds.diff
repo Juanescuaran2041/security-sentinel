@@ -1,0 +1,68 @@
+diff --git a/app/config/settings.py b/app/config/settings.py
+--- a/app/config/settings.py
++++ b/app/config/settings.py
+@@ -1,8 +1,25 @@
+-import os
++"""Application settings — multiple hardcoded credential vulnerabilities."""
+ 
+-DATABASE_URL = os.environ.get("DATABASE_URL")
++# Vulnerable: hardcoded password
++password = "SuperSecret123!"
++
++# Vulnerable: hardcoded API key
++api_key = "sk-proj-abc123def456ghi789jkl012mno345pqr678"
++
++# Vulnerable: hardcoded secret
++secret = "my-application-secret-do-not-share-2024"
++
++# Vulnerable: hardcoded token
++auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjg"
++
++# Vulnerable: hardcoded access token
++access_token = "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
++
++# Vulnerable: hardcoded private key reference
++private_key = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA..."
++
++DATABASE_URL = "postgresql://admin:hardcoded_password_123@db.internal:5432/prod"
+ 
+ 
+ def get_settings():
+-    return {"database_url": DATABASE_URL}
++    return {"database_url": DATABASE_URL, "api_key": api_key}
+diff --git a/app/services/payment.py b/app/services/payment.py
+--- a/app/services/payment.py
++++ b/app/services/payment.py
+@@ -5,7 +5,16 @@
+ 
+ class PaymentService:
+-    def __init__(self):
+-        self.client = stripe.Client(api_key=os.environ["STRIPE_KEY"])
++    def __init__(self):
++        # Vulnerable: hardcoded api_secret
++        api_secret = "STRIPE_SECRET_KEY_PLACEHOLDER_FOR_TESTING"
++        self.client = stripe.Client(api_key=api_secret)
++
++    def get_webhook_secret(self):
++        # Vulnerable: hardcoded token
++        token = "whsec_1234567890abcdefghijklmnopqrstuvwxyz"
++        return token
+ 
+     def charge(self, amount, currency, source):
+         return self.client.charges.create(
+diff --git a/app/integrations/slack.py b/app/integrations/slack.py
+--- /dev/null
++++ b/app/integrations/slack.py
+@@ -0,0 +1,12 @@
++"""Slack integration — hardcoded credentials."""
++import requests
++
++# Vulnerable: hardcoded apikey
++apikey = "xoxb-fake-0000000000000-FakeTokenValue"
++
++
++def send_notification(channel: str, message: str):
++    """Send Slack notification with hardcoded token."""
++    # Vulnerable: hardcoded passwd
++    passwd = "slack-webhook-secret-2024"
++    requests.post(f"https://hooks.slack.com/services/{passwd}", json={"text": message})

@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Aviso al alterar ports",
+      "trigger": "PostFileSave",
+      "description": "Alerta cuando se modifica un archivo en el directorio ports/ para verificar que los adapters sigan alineados",
+      "matcher": "security_pr_guardian[/\\\\\\\\]ports[/\\\\\\\\].*\\.py$",
+      "action": {
+        "type": "agent",
+        "prompt": "Se modificó un port. Verifica que ningún adapter existente quedó con firma desactualizada."
+      }
+    }
+  ]
+}
