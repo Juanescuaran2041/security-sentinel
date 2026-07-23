@@ -129,9 +129,7 @@ def _parse_vulns(
 
 
 @mcp.tool()
-async def lookup_cve(
-    package: str, version: str, ecosystem: str
-) -> list[CVEFinding] | ErrorFinding:
+async def lookup_cve(package: str, version: str, ecosystem: str) -> list[CVEFinding] | ErrorFinding:
     """Consulta OSV.dev por vulnerabilidades conocidas para un paquete.
 
     Args:
