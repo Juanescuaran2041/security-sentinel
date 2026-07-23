@@ -97,10 +97,6 @@ async def test_error_lookup_returned_by_server(mcp_session, single_dependency):
     CUANDO: el adaptador llama a lookup_vulnerabilities con 1 dependencia.
     ENTONCES: el resultado contiene un ErrorFinding con tipo='error_lookup'.
 
-    Pistas:
-      - Configura mcp_session.call_tool.return_value con make_mcp_response(...)
-      - El payload debe ser un dict con los campos de ErrorFinding
-      - Verifica que results[0] es instancia de ErrorFinding y tipo == "error_lookup"
     """
     mcp_adapter = CVELookUpAdapter(mcp_session)
     mcp_session.call_tool.return_value = make_mcp_response({
@@ -131,10 +127,6 @@ async def test_limit_exceeded_when_over_50_dependencies(mcp_session, many_depend
       - El último elemento del resultado es un ErrorFinding tipo 'limit_exceeded'.
       - La error_descripcion menciona que se omitieron 5 dependencias.
 
-    Pistas:
-      - Configura mcp_session.call_tool.return_value para retornar lista vacía []
-      - Usa mcp_session.call_tool.call_count para verificar las 50 llamadas
-      - El finding limit_exceeded se agrega AL FINAL de results
     """
     # TODO: Tu código aquí
     adapter = CVELookUpAdapter(mcp_session)
@@ -196,11 +188,7 @@ async def test_empty_list_when_no_vulnerabilities(mcp_session, single_dependency
     CUANDO: el adaptador llama a lookup_vulnerabilities con 1 dependencia.
     ENTONCES: el resultado es una lista vacía [].
 
-    Pistas:
-      - make_mcp_response([]) simula que OSV no encontró nada
-      - La lista retornada debe tener len == 0
     """
-    # TODO: Tu código aquí
     adapter = CVELookUpAdapter(mcp_session)
     mcp_session.call_tool.return_value = make_mcp_response([])
     results = await adapter.lookup_vulnerabilities(single_dependency)
