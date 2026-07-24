@@ -8,21 +8,21 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
 
 ## Tasks
 
-- [ ] 1. Estructura del proyecto y modelos de dominio
+- [x] 1. Estructura del proyecto y modelos de dominio
   - [x] 1.1 Inicializar la estructura de paquete Python (`pyproject.toml`, `setup.cfg`, `requirements.txt` con dependencias pinned)
   - [x] 1.2 Crear los modelos Pydantic en `security_pr_guardian/core/models.py` (`Severity`, `CandidateFinding`, `LLMVerdict`, `Recommendation`, `ConfirmedFinding`, `KBFragment`, `AnalysisResult`, `DependencyChange`, `LogEvent`, `AppConfig`)
-  - [ ] 1.3 Definir los puertos (ABCs) en `security_pr_guardian/ports/` (`DiffExtractionPort`, `StaticAnalysisPort`, `CVELookupPort`, `KBRetrievalPort`, `LLMReasoningPort`, `PRCommentPort`)
+  - [x] 1.3 Definir los puertos (ABCs) en `security_pr_guardian/ports/` (`DiffExtractionPort`, `StaticAnalysisPort`, `CVELookupPort`, `KBRetrievalPort`, `LLMReasoningPort`, `PRCommentPort`)
   - [x] 1.4 Implementar `StructuredLogger` en `security_pr_guardian/core/logger.py` con emisión de eventos de log JSON con los campos `timestamp`, `analysis_id`, `componente`, `evento`, `duracion_ms` (opcional) y `detalle`
-  - [ ] 1.5 Escribir tests unitarios para los modelos y para la validación de `AppConfig` (variables obligatorias ausentes, valores fuera de rango, merge env vars vs `config.yaml`)
+  - [x] 1.5 Escribir tests unitarios para los modelos y para la validación de `AppConfig` (variables obligatorias ausentes, valores fuera de rango, merge env vars vs `config.yaml`)
 
-- [ ] 2. Static_Analyzer — servidor MCP y adaptador
-  - [ ] 2.1 Implementar `PatternEngine` en `security_pr_guardian/adapters/mcp/pattern_engine.py` con las 7 reglas regex (CWE-89, 78, 79, 502, 798, 327, 552) aplicadas sobre líneas con prefijo `+` del diff unificado
-  - [ ] 2.2 Crear el servidor FastMCP `static_analyzer_server.py` que expone la herramienta `analyze_diff(diff: str) -> StaticAnalysisResult` usando `PatternEngine`; incluir manejo de `errores_parciales` por archivo; completar en máximo 60 s
-  - [ ] 2.3 Implementar `StaticAnalyzerMCPAdapter` en `adapters/mcp/static_analyzer_adapter.py` implementando `StaticAnalysisPort`
-  - [ ] 2.4 Crear fixtures de diff en `tests/fixtures/` para cada uno de los 7 CWE (`cwe_89_sql_injection.diff`, etc.) y para `clean_pr.diff` y `large_pr.diff` (>10 000 líneas)
-  - [ ] 2.5 Escribir tests unitarios del `PatternEngine`: cada regla dispara en el fixture vulnerable y no genera falso positivo en `clean_pr.diff`
-  - [ ] 2.6 Escribir test de contrato MCP para `analyze_diff`: input `{"diff": str}` → output coincide con el schema JSON de `StaticAnalysisResult`
-  - [ ] 2.7 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 9: Detección de manifiestos exacta por nombre** — `st.sampled_from(MANIFEST_NAMES)` unión `st.text()` para verificar que solo los nombres canónicos se clasifican como manifiestos y los demás no
+- [x] 2. Static_Analyzer — servidor MCP y adaptador
+  - [x] 2.1 Implementar `PatternEngine` en `security_pr_guardian/adapters/mcp/pattern_engine.py` con las 7 reglas regex (CWE-89, 78, 79, 502, 798, 327, 552) aplicadas sobre líneas con prefijo `+` del diff unificado
+  - [x] 2.2 Crear el servidor FastMCP `static_analyzer_server.py` que expone la herramienta `analyze_diff(diff: str) -> StaticAnalysisResult` usando `PatternEngine`; incluir manejo de `errores_parciales` por archivo; completar en máximo 60 s
+  - [x] 2.3 Implementar `StaticAnalyzerMCPAdapter` en `adapters/mcp/static_analyzer_adapter.py` implementando `StaticAnalysisPort`
+  - [x] 2.4 Crear fixtures de diff en `tests/fixtures/` para cada uno de los 7 CWE (`cwe_89_sql_injection.diff`, etc.) y para `clean_pr.diff` y `large_pr.diff` (>10 000 líneas)
+  - [x] 2.5 Escribir tests unitarios del `PatternEngine`: cada regla dispara en el fixture vulnerable y no genera falso positivo en `clean_pr.diff`
+  - [x] 2.6 Escribir test de contrato MCP para `analyze_diff`: input `{"diff": str}` → output coincide con el schema JSON de `StaticAnalysisResult`
+  - [x] 2.7 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 9: Detección de manifiestos exacta por nombre** — `st.sampled_from(MANIFEST_NAMES)` unión `st.text()` para verificar que solo los nombres canónicos se clasifican como manifiestos y los demás no
     - Validates: Requirements 2.2
 
 - [ ] 3. CVE_Lookup — servidor MCP y adaptador

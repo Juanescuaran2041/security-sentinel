@@ -7,19 +7,17 @@ para cada dependencia, con un límite configurable (default 50).
 import json
 
 from security_pr_guardian.core.models import CVEFinding, DependencyChange, ErrorFinding
-from security_pr_guardian.ports.CVEPort import CVEPort
+from security_pr_guardian.ports.cve_lookup import CVELookupPort
 
 
-class CVELookUpAdapter(CVEPort):
+class CVELookUpAdapter(CVELookupPort):
     """Adaptador que consulta vulnerabilidades CVE vía sesión MCP."""
 
     def __init__(self, mcp_session, max_dependencies: int = 50):
         self._mcp_session = mcp_session
         self.max_dependencies = max_dependencies
 
-    async def lookup_vulnerabilities(
-        self, packages: list[DependencyChange]
-    ) -> list[CVEFinding | ErrorFinding]:
+    async def lookup_vulnerabilities(self, packages: list[DependencyChange] ) -> list[CVEFinding | ErrorFinding]:
         limited = packages[: self.max_dependencies]
         omitted = len(packages) - len(limited)
 

@@ -1,0 +1,65 @@
+diff --git a/app/security/hashing.py b/app/security/hashing.py
+--- a/app/security/hashing.py
++++ b/app/security/hashing.py
+@@ -1,7 +1,32 @@
+-import hashlib
++import hashlib
++from Crypto.Cipher import DES
++from Crypto.Hash import MD5, SHA
+ 
+ 
+-def hash_password(password: str) -> str:
+-    """Hash password using SHA-256."""
+-    return hashlib.sha256(password.encode()).hexdigest()
++def hash_password_md5(password: str) -> str:
++    """Hash password — vulnerable via hashlib.md5."""
++    return hashlib.md5(password.encode()).hexdigest()
++
++
++def hash_password_sha1(password: str) -> str:
++    """Hash password — vulnerable via hashlib.sha1."""
++    return hashlib.sha1(password.encode()).hexdigest()
++
++
++def encrypt_data_des(key: bytes, data: bytes) -> bytes:
++    """Encrypt data — vulnerable via DES.new."""
++    cipher = DES.new(key, DES.MODE_ECB)
++    return cipher.encrypt(data)
++
++
++def hash_with_md5_module(data: bytes) -> str:
++    """Hash — vulnerable via MD5.new from PyCryptodome."""
++    h = MD5.new(data)
++    return h.hexdigest()
++
++
++def hash_with_sha_module(data: bytes) -> str:
++    """Hash — vulnerable via SHA.new (SHA-1)."""
++    h = SHA.new(data)
++    return h.hexdigest()
+diff --git a/app/utils/checksum.py b/app/utils/checksum.py
+--- /dev/null
++++ b/app/utils/checksum.py
+@@ -0,0 +1,20 @@
++"""Checksum utilities — weak crypto patterns."""
++import hashlib
++
++
++def file_checksum_md5(filepath: str) -> str:
++    """Calculate file checksum — vulnerable via hashlib.md5."""
++    hasher = hashlib.md5()
++    with open(filepath, "rb") as f:
++        for chunk in iter(lambda: f.read(4096), b""):
++            hasher.update(chunk)
++    return hasher.hexdigest()
++
++
++def verify_integrity_sha1(data: bytes, expected: str) -> bool:
++    """Verify integrity — vulnerable via hashlib.sha1."""
++    actual = hashlib.sha1(data).hexdigest()
++    return actual == expected
++
++
++def quick_hash(value: str) -> str:
++    """Quick hash for caching — vulnerable direct md5 call pattern."""
++    return hashlib.md5(value.encode()).hexdigest()
