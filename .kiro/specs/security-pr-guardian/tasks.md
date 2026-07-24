@@ -2,7 +2,7 @@
 
 ## Overview
 
-Security PR Guardian es una herramienta CLI pública (`pip install security-pr-guardian`) y GitHub Action que analiza Pull Requests combinando SAST (análisis estático con regex sobre 7 CWEs), escaneo de CVEs vía OSV.dev, RAG sobre una base de conocimiento OWASP/CWE (ChromaDB + sentence-transformers) y razonamiento LLM vía Amazon Bedrock para filtrar falsos positivos antes de publicar un comentario estructurado en el PR.
+Security PR Guardian es una herramienta CLI pública (`pip install security-pr-guardian`) y GitHub Action que analiza Pull Requests combinando SAST (análisis estático con regex sobre 7 CWEs), escaneo de CVEs vía OSV.dev, RAG sobre una base de conocimiento OWASP/CWE (ChromaDB + sentence-transformers) y razonamiento LLM vía Amazon Bedrock para filtrar falsos positivos antes de publicar un comentario estructurado en el PR. El agente se adapta al equipo mediante un perfil de convenciones configurable (`.security-guardian.yml`) generado por el comando `security-guardian init --profile`.
 
 El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) definida en el diseño. Se construye desde los cimientos (modelos y puertos) hacia afuera (adaptadores, orquestador, CLI), con tests unitarios, de integración y basados en propiedades (Hypothesis) entretejidos en cada tarea.
 
@@ -41,7 +41,7 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
     - Validates: Requirements 2.6
 
 - [ ] 5. KB_Retriever — ChromaKBAdapter y base de conocimiento
-  - [ ] 5.1 Crear la base de conocimiento en `security_pr_guardian/knowledge_base/`: 10 archivos Markdown para OWASP Top 10 2025 (`owasp_top10_2025/A01.md`–`A10.md`), 7 archivos de descripción + remediación de CWE (`cwes/CWE-89.md`, 78, 79, 502, 798, 327, 552), y al menos 20 casos históricos en `historical_cases/` (snippet vulnerable + snippet corregido + referencia CVE)
+  - [x] 5.1 Crear la base de conocimiento en `security_pr_guardian/knowledge_base/`: 10 archivos Markdown para OWASP Top 10 2025 (`owasp_top10_2025/A01.md`–`A10.md`), 7 archivos de descripción + remediación de CWE (`cwes/CWE-89.md`, 78, 79, 502, 798, 327, 552), y al menos 20 casos históricos en `historical_cases/` (snippet vulnerable + snippet corregido + referencia CVE)
   - [ ] 5.2 Implementar `ChromaKBAdapter` en `adapters/kb/chroma_adapter.py` implementando `KBRetrievalPort`: indexación en `~/.security-guardian/kb/` con `sentence-transformers/all-MiniLM-L6-v2`, similitud coseno, retorno de top-k con `score_relevancia`; `baja_confianza=True` cuando todos los scores < 0.5; timeout de 5 s con retorno de `[]` y emisión del evento `kb_timeout`
   - [ ] 5.3 Escribir tests unitarios del `ChromaKBAdapter`: `baja_confianza=True` cuando todos los scores < 0.5, retorno de lista vacía en timeout, retorno de fragmentos disponibles (<3) con `baja_confianza=True`, `score_relevancia` siempre en [0.0, 1.0]
   - [ ] 5.4 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 7: KB retorna como máximo top_k fragmentos** — `st.integers(min_value=1, max_value=10)` como `top_k` — verificar que `0 ≤ len(result) ≤ top_k`
@@ -98,6 +98,16 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
   - [ ] 10.7 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 15: La salida JSON del CLI siempre es JSON parseable válido** — `st.builds(AnalysisResult, ...)` renderizado por el formateador CLI — verificar que los bytes en stdout se deserializan a JSON válido con las claves `analysis_id`, `confirmed_count`, `discarded_count`, `confirmed_findings` y `diff_truncated`
     - Validates: Requirements 1.8
 
+- [ ] 14. Team Profile — perfil de equipo adaptable
+  - [ ] 14.1 Crear el modelo Pydantic `TeamProfile` en `security_pr_guardian/core/models.py` con los campos: `frameworks` (list[str], default []), `auth_libraries` (list[str], default []), `allowed_patterns` (list[AllowedPattern], default []), `min_severity` (Severity, default LOW), `custom_exceptions` (list[str], default []) — y el modelo `AllowedPattern` con `cwe_id` (str) y `razon` (str)
+  - [ ] 14.2 Implementar `TeamProfileLoader` en `security_pr_guardian/core/team_profile.py`: buscar `.security-guardian.yml` en cwd, parsear con `yaml.safe_load()`, validar con `TeamProfile`, retornar instancia con defaults en caso de archivo ausente o YAML inválido (sin lanzar excepciones), emitir warning al logger cuando el perfil falla
+  - [ ] 14.3 Extender `BedrockAdapter` y `AnthropicAdapter` para aceptar `team_profile: TeamProfile | None` en `evaluate_finding` e inyectar la sección `## Perfil del Equipo` en el prompt USER cuando el perfil tiene contenido (frameworks, allowed_patterns, custom_exceptions no vacíos)
+  - [ ] 14.4 Implementar `security-guardian init --profile` en el CLI: cuestionario interactivo con Rich prompts (frameworks, auth_libraries, allowed_patterns, min_severity, custom_exceptions), generación de `.security-guardian.yml`, confirmación antes de sobreescribir si el archivo ya existe
+  - [ ] 14.5 Implementar el flag `--auto-detect` para `security-guardian init --profile`: escanear `requirements.txt`, `package.json`, `pyproject.toml`, `Cargo.toml` para detectar frameworks; detectar librerías de auth por presencia de nombres conocidos (`bcrypt`, `argon2`, `passlib`, `django-allauth`, `passport`, `jose`); inferir `min_severity` desde `.bandit` o `ruff.toml` si existen; usar valores detectados como defaults en el cuestionario
+  - [ ] 14.6 Escribir tests unitarios del `TeamProfileLoader`: carga correcta desde YAML válido, degradación a defaults en YAML inválido, degradación a defaults cuando el archivo no existe, warning emitido en ambos casos de falla, ningún test lanza excepción no manejada
+  - [ ] 14.7 Escribir tests unitarios del prompt con `TeamProfile`: sección `## Perfil del Equipo` presente en el prompt cuando el perfil tiene contenido, sección ausente cuando el perfil está vacío (todos defaults), `allowed_patterns` formateados correctamente en el prompt
+  - [ ] 14.8 Escribir tests unitarios del auto-detect: detección correcta de frameworks desde fixtures de `requirements.txt` y `package.json`, detección de librerías de auth, no-crash cuando los archivos no existen
+
 - [ ] 11. Tests de integración end-to-end
   - [ ] 11.1 Escribir test de integración — happy path completo: diff con inyección SQL + una dependencia vulnerable → finding confirmado en comentario del PR (todos los servicios externos mockeados con `pytest-httpx` y `moto`)
   - [ ] 11.2 Escribir test de integración — análisis CVE omitido cuando no hay manifiestos de dependencias en el diff
@@ -124,7 +134,7 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
 {
   "waves": [
     { "wave": 1, "tasks": ["1"] },
-    { "wave": 2, "tasks": ["2", "3", "4", "5", "6", "7"] },
+    { "wave": 2, "tasks": ["2", "3", "4", "5", "6", "7", "14"] },
     { "wave": 3, "tasks": ["8", "9"] },
     { "wave": 4, "tasks": ["10"] },
     { "wave": 5, "tasks": ["11"] },
@@ -133,10 +143,11 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
 }
 ```
 
-Las tareas 2–7 son independientes entre sí y pueden ejecutarse en paralelo una vez completada la tarea 1.
+Las tareas 2–7 y 14 son independientes entre sí y pueden ejecutarse en paralelo una vez completada la tarea 1. La tarea 14.3 (extensión de los adapters LLM) tiene dependencia suave sobre 6.1 y 6.2, pero puede desarrollarse en paralelo si los adapters aún no están implementados — se integra cuando ambas tareas converjan.
 
 ## Notes
 
+- **Team Profile**: `.security-guardian.yml` es opcional y versionable. Si no existe, el agente funciona con comportamiento por defecto. Si existe con YAML inválido, emite warning y continúa — nunca falla por el perfil.
 - **Prioridad AWS**: Amazon Bedrock (`BedrockAdapter`) es el backend LLM principal y obligatorio para producción. `AnthropicAdapter` es solo un fallback para demos sin credenciales AWS.
 - **No hay servidor persistente**: cada invocación de `security-guardian check` es stateless y autocontenida. No hay webhook, no hay servidor HTTP.
 - **Regex sobre AST en el MVP**: el `PatternEngine` usa regex agnóstico del lenguaje sobre el texto del diff. La mejora a AST/tree-sitter queda como trabajo futuro.
