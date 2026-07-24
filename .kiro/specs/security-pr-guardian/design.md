@@ -14,6 +14,7 @@ El sistema está diseñado para distribución pública (`pip install security-pr
 2. **Adopción sin fricción real**: `pip install` + credenciales. Amazon Bedrock es el backend LLM principal (obligatorio para producción / evaluadores AWS); Anthropic es el fallback para demos sin credenciales AWS.
 3. **Extensible sin sobre-ingeniería**: arquitectura hexagonal (Ports & Adapters), pero solo UN adaptador por puerto en el MVP.
 4. **Observable**: logs estructurados en JSON con un `analysis_id` propagado permiten rastrear cada decisión de extremo a extremo.
+5. **Adaptable por equipo**: el archivo `.security-guardian.yml` opcional permite a cada equipo declarar sus convenciones de seguridad para que el LLM contextualice su veredicto en lugar de aplicar reglas genéricas.
 
 ---
 
@@ -329,10 +330,13 @@ security-guardian
   check   --repo <owner/repo> --pr <numero>
           [--output text|json]
           [--no-comment]
-  init
+  init    [--profile]
+          [--auto-detect]
 ```
 
 El adaptador CLI resuelve `AppConfig`, instancia todos los adaptadores, los inyecta por constructor en `SecurityAgent`, y llama a `agent.run_analysis()`.
+
+El subcomando `security-guardian init --profile` ejecuta un cuestionario interactivo usando `rich.prompt` y genera `.security-guardian.yml`. Con el flag `--auto-detect`, pre-rellena los campos escaneando el directorio de trabajo antes de mostrar las preguntas.
 
 Códigos de salida:
 - `0` — análisis completo, sin hallazgos explotables.
@@ -444,6 +448,17 @@ class DependencyChange(BaseModel):
     package: str
     version: str
     ecosystem: str                   # "PyPI", "npm", "crates.io", etc.
+
+class AllowedPattern(BaseModel):
+    cwe_id: str                      # formato "CWE-<número>"
+    razon: str                       # descripción del uso legítimo
+
+class TeamProfile(BaseModel):
+    frameworks: list[str] = []       # ej. ["django", "react", "fastapi"]
+    auth_libraries: list[str] = []   # ej. ["bcrypt", "django-allauth"]
+    allowed_patterns: list[AllowedPattern] = []  # patrones CWE permitidos con razón
+    min_severity: Severity = Severity.LOW        # severidad mínima a reportar
+    custom_exceptions: list[str] = []            # texto libre de convenciones del equipo
 
 class LogEvent(BaseModel):
     timestamp: datetime              # ISO 8601 UTC
@@ -577,6 +592,51 @@ class LogEvent(BaseModel):
 *Para cualquier* resultado de análisis renderizado con `--output json`, los bytes escritos en stdout deben deserializarse a un objeto JSON válido que contenga como mínimo las claves `analysis_id`, `confirmed_count`, `discarded_count`, `confirmed_findings` y `diff_truncated`.
 
 **Validates: Requirements 1.8**
+
+### 9. TeamProfile — perfil de equipo
+
+`security_pr_guardian/core/team_profile.py` contiene `TeamProfileLoader` y el modelo `TeamProfile`.
+
+**TeamProfileLoader**:
+- Busca `.security-guardian.yml` en el directorio de trabajo (`cwd`) al instanciarse.
+- Si existe: parsea con `yaml.safe_load()`, valida con el modelo Pydantic `TeamProfile`, retorna la instancia.
+- Si no existe o el YAML es inválido: retorna `TeamProfile()` (defaults vacíos) y emite un warning al logger.
+- No lanza excepciones — degradación graciosa siempre.
+
+**Integración en el prompt del LLM**: cuando `TeamProfile` tiene contenido, `BedrockAdapter` y `AnthropicAdapter` añaden una sección `## Perfil del Equipo` al prompt USER antes de `## Contexto de la Base de Conocimiento`:
+
+```
+## Perfil del Equipo
+Frameworks: {frameworks}
+Librerías de autenticación: {auth_libraries}
+Patrones permitidos por convención del equipo:
+{por cada allowed_pattern: "- CWE-{id}: {razon}"}
+Excepciones adicionales:
+{por cada custom_exception: "- {texto}"}
+Severidad mínima de reporte: {min_severity}
+
+Considera estas convenciones al evaluar si el hallazgo es realmente explotable
+en el contexto de este equipo.
+```
+
+**`security-guardian init --profile`** — flujo interactivo:
+
+```
+Paso 1: Auto-detect (si --auto-detect)
+  → Escanea requirements.txt, package.json, pyproject.toml, Cargo.toml
+  → Detecta librerías de auth conocidas (bcrypt, passlib, argon2, django-allauth, etc.)
+  → Infiere min_severity desde .bandit o ruff.toml si existen
+
+Paso 2: Cuestionario (Rich prompts, valores detectados como defaults)
+  → ¿Frameworks del proyecto? [django, react] ← pre-rellenado si --auto-detect
+  → ¿Librerías de hashing/auth? [bcrypt] ←
+  → ¿Usos legítimos de patrones marcados como vulnerables? (ej. "md5 para cache keys")
+  → ¿Severidad mínima a reportar? [low]
+  → ¿Convenciones adicionales del equipo?
+
+Paso 3: Generar .security-guardian.yml
+  → Confirmación antes de escribir si el archivo ya existe
+```
 
 ---
 

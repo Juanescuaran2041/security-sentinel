@@ -172,6 +172,30 @@ El sistema está diseñado para distribución pública: cualquier desarrollador 
 
 ---
 
+### Requisito 10: Perfil de equipo y adaptación contextual del análisis
+
+**User Story:** Como desarrollador o líder técnico, quiero configurar las prácticas y convenciones de seguridad específicas de mi equipo mediante un comando interactivo, para que el agente adapte su razonamiento a nuestro contexto en lugar de aplicar reglas genéricas que generen falsos positivos irrelevantes.
+
+#### Criterios de Aceptación
+
+1. THE Security_Agent SHALL exponer el subcomando `security-guardian init --profile` que inicia un cuestionario interactivo en la terminal (usando Rich prompts) con las siguientes preguntas: (a) frameworks y lenguajes principales del proyecto, (b) librería de autenticación/hashing usada, (c) usos legítimos de patrones habitualmente marcados como vulnerables (ej. `pickle` en caché interno, `md5` para ETags), (d) severidad mínima a reportar, y (e) excepciones o convenciones de seguridad propias del equipo.
+
+2. WHEN el usuario completa el cuestionario de `security-guardian init --profile`, THE Security_Agent SHALL generar un archivo `.security-guardian.yml` en la raíz del repositorio con los campos: `team_profile.frameworks` (lista de strings), `team_profile.auth_libraries` (lista de strings), `team_profile.allowed_patterns` (lista de objetos `{cwe_id, razon}`), `team_profile.min_severity` (string: `critical`/`high`/`medium`/`low`/`info`, default `low`), y `team_profile.custom_exceptions` (lista de strings de texto libre).
+
+3. WHEN el archivo `.security-guardian.yml` existe en la raíz del repositorio al ejecutar `security-guardian check`, THE Security_Agent SHALL leer el `team_profile` y pasarlo al `LLMReasoningPort` como contexto adicional en el prompt de evaluación de cada finding, anteponiéndolo al contexto RAG estándar.
+
+4. WHEN el `team_profile` declara un patrón como permitido (`allowed_patterns`) con el mismo `cwe_id` que un finding, THE Security_Agent SHALL incluir esa excepción en el prompt del LLM para que considere explícitamente si el hallazgo cae dentro del uso permitido antes de emitir su veredicto.
+
+5. IF el archivo `.security-guardian.yml` existe pero contiene YAML inválido o campos con tipos incorrectos, THEN THE Security_Agent SHALL emitir un warning visible en la salida del CLI indicando que el perfil no pudo cargarse y continuar el análisis sin él (degradación graciosa), sin terminar con código de salida 2.
+
+6. WHEN el usuario ejecuta `security-guardian init --profile` y ya existe un `.security-guardian.yml`, THE Security_Agent SHALL mostrar los valores actuales como defaults en cada pregunta del cuestionario, permitiendo al usuario confirmarlos o modificarlos.
+
+7. THE `.security-guardian.yml` generado SHALL ser un archivo de texto plano legible, editable manualmente por el desarrollador, y apto para ser versionado en el repositorio de forma que todo el equipo comparta el mismo perfil de análisis.
+
+8. WHEN se ejecuta `security-guardian init --profile` con el flag `--auto-detect`, THE Security_Agent SHALL escanear el directorio de trabajo actual para pre-rellenar automáticamente: `frameworks` (detectados desde `requirements.txt`, `package.json`, `pyproject.toml`, `Cargo.toml`), `auth_libraries` (detectados por presencia de imports conocidos como `bcrypt`, `django-allauth`, `passport`), y `min_severity` (inferido desde configuraciones de linters existentes como `.bandit`, `ruff.toml`); el cuestionario interactivo se ejecutará igualmente mostrando los valores detectados como defaults confirmables.
+
+---
+
 ### Requisito 9: Observabilidad y trazabilidad del análisis
 
 **User Story:** Como operador del servicio, quiero que cada análisis quede registrado con suficiente detalle para diagnosticar fallos y auditar decisiones del agente, para mantener la confiabilidad del sistema en producción.
