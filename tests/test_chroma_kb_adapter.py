@@ -108,11 +108,18 @@ async def test_baja_confianza_when_all_scores_below_threshold(adapter, sample_fi
       - Configurá adapter._model.encode.return_value = [0.1] * 384
       - Llamá a adapter.retrieve(sample_finding, top_k=3) y verificá baja_confianza
     """
-    # TODO: Tu código aquí
-    pass
+    #Crear lista de resultados malos 
+    bad_results = make_chroma_results([1.2 , 1.5, 1.8 ])
+    adapter._collection.count.return_value = 3
+    adapter._collection.query.return_value = bad_results
+    adapter._model.encode.return_value = [0.1] * 384
+    
+    result = await adapter.retrieve(sample_finding, top_k=3)
+    assert all(fragment.baja_confianza for fragment in result)
+    assert all(fragment.score_relevancia < 0.5 for fragment in result)
 
 
-# ---------------------------------------------------------------------------
+#  ---------------------------------------------------------------------------
 # Test 2: lista vacía en timeout
 # ---------------------------------------------------------------------------
 
@@ -131,8 +138,17 @@ async def test_empty_list_on_timeout(sample_finding):
       - Llamá adapter.retrieve(sample_finding) y verificá que el resultado es []
       - No necesitás mockear _collection ni _model para este test
     """
-    # TODO: Tu código aquí
-    pass
+    adapter = ChromaKBAdapter(logger= None)
+    # new_callable permite que el clon se comporte como una funcion asincrona
+
+    async def slow (*args, **kwargs):
+        await asyncio.sleep(10)
+
+    with patch.object(adapter, "_async_retrieve", new_callable=AsyncMock) as mock_retrieve:
+      mock_retrieve.side_effect = slow
+      result = await adapter.retrieve(sample_finding)
+
+    assert result == []
 
 
 # ---------------------------------------------------------------------------
@@ -154,8 +170,13 @@ async def test_fewer_than_topk_fragments_with_baja_confianza(adapter, sample_fin
       - Usá make_chroma_results con 2 distancias > 1.0
       - Verificá len(result) == 2 y que ambos tienen baja_confianza=True
     """
-    # TODO: Tu código aquí
-    pass
+    adapter._collection.count.return_value = 2
+    adapter._collection.query.return_value = make_chroma_results([1.2, 1.5])
+    adapter._model.encode.return_value = [0.1] * 384
+
+    result = await adapter.retrieve(sample_finding, top_k=3)
+    assert len(result) == 2
+    assert all(fragment.baja_confianza for fragment in result)
 
 
 # ---------------------------------------------------------------------------
@@ -175,5 +196,12 @@ async def test_score_relevancia_within_bounds(adapter, sample_finding):
       - Usá make_chroma_results([0.0, 1.0, 2.0]) para cubrir los extremos
       - Verificá que todos los fragmentos tienen 0.0 <= f.score_relevancia <= 1.0
     """
-    # TODO: Tu código aquí
-    pass
+    scores = make_chroma_results([0.0, 1.0, 2.0])
+    adapter._collection.count.return_value = 3
+    adapter._collection.query.return_value = scores
+    
+    adapter._model.encode.return_value = [0.1] * 384
+    result = await adapter.retrieve(sample_finding, top_k=3)
+
+    assert all(0.0 <= fragment.score_relevancia <= 1.0 for fragment in result)
+

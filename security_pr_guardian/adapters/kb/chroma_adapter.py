@@ -87,6 +87,8 @@ class ChromaKBAdapter(KBRetrievalPort):
         Si la colección está vacía, indexa todos los .md de KB_SOURCE_DIR.
         Raises RuntimeError if chromadb or sentence_transformers are not installed.
         """
+        if self._initialized:
+            return
 
         # Crear directorio de persistencia si no existe
         KB_PERSIST_DIR.mkdir(parents=True, exist_ok=True)
@@ -164,7 +166,7 @@ class ChromaKBAdapter(KBRetrievalPort):
             doc_id = fuente.replace("/", "_").replace("\\", "_").replace(".md", "")
 
             # Generar embedding
-            embedding = self._model.encode(contenido, convert_to_list=True)
+            embedding = list(self._model.encode(contenido))
 
             documents.append(contenido)
             embeddings.append(embedding)
@@ -280,7 +282,7 @@ class ChromaKBAdapter(KBRetrievalPort):
         # Generar embedding de la query en thread pool (CPU-bound)
         query_embedding = await loop.run_in_executor(
             None,
-            lambda: self._model.encode(query_text, convert_to_list=True),
+            lambda: list(self._model.encode(query_text)),
         )
 
         # Limitar top_k al número de documentos disponibles
