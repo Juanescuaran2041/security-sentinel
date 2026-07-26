@@ -19,7 +19,9 @@ class KBRetrievalPort(ABC):
     """
 
     @abstractmethod
-    async def retrieve(self, finding: CandidateFinding, top_k: int = 3) -> list[KBFragment]:
+    async def retrieve(
+        self, finding: CandidateFinding, top_k: int = 3
+    ) -> list[KBFragment]:
         """Recupera fragmentos relevantes de la base de conocimiento.
 
         Args:

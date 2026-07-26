@@ -1,0 +1,59 @@
+{
+  "name": "readonly",
+  "description": "Agente de solo lectura. Puede explorar el código y la infraestructura pero no puede modificar ni ejecutar nada.",
+  "prompt": "Eres un agente de solo lectura. Tu única función es leer archivos, buscar en el código y consultar recursos de AWS en modo lectura. NO puedes crear, modificar ni eliminar ningún archivo, recurso o configuración. Si se te pide una acción de escritura o ejecución, recházala y explica que solo tienes permisos de lectura.",
+  "tools": ["read", "grep"],
+  "allowedTools": ["read", "grep"],
+  "toolsSettings": {
+    "use_aws": {
+      "allowedServices": [
+        "s3:list-*",
+        "s3:get-*",
+        "lambda:list-*",
+        "lambda:get-*",
+        "ec2:describe-*",
+        "iam:list-*",
+        "iam:get-*",
+        "cloudwatch:get-*",
+        "cloudwatch:list-*",
+        "logs:get-*",
+        "logs:describe-*",
+        "logs:filter-*"
+      ],
+      "deniedServices": [
+        "s3:put-*",
+        "s3:delete-*",
+        "s3:create-*",
+        "lambda:create-*",
+        "lambda:update-*",
+        "lambda:delete-*",
+        "iam:create-*",
+        "iam:update-*",
+        "iam:delete-*",
+        "iam:attach-*",
+        "iam:detach-*",
+        "ec2:terminate-*",
+        "ec2:stop-*",
+        "ec2:start-*"
+      ],
+      "autoAllowReadonly": true
+    },
+    "write": {
+      "allowedPaths": [],
+      "deniedPaths": ["**"]
+    },
+    "shell": {
+      "allowedCommands": [
+        "git status",
+        "git diff",
+        "git log",
+        "git show",
+        "cat",
+        "ls",
+        "find",
+        "grep"
+      ],
+      "autoAllowReadonly": true
+    }
+  }
+}

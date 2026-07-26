@@ -1,0 +1,63 @@
+diff --git a/app/utils/system.py b/app/utils/system.py
+--- a/app/utils/system.py
++++ b/app/utils/system.py
+@@ -1,5 +1,30 @@
+ import os
++import subprocess
+ 
+ 
+-def get_hostname():
+-    return os.uname().nodename
++def ping_host(hostname: str):
++    """Ping a host — vulnerable via os.system."""
++    os.system(f"ping -c 4 {hostname}")
++
++
++def read_log(filename: str):
++    """Read a log file — vulnerable via os.popen."""
++    output = os.popen(f"cat /var/log/{filename}").read()
++    return output
++
++
++def compress_directory(path: str, archive_name: str):
++    """Compress dir — vulnerable via subprocess with shell=True."""
++    subprocess.call(f"tar -czf {archive_name}.tar.gz {path}", shell=True)
++
++
++def run_diagnostics(command: str):
++    """Run diagnostic command — vulnerable via subprocess.run shell=True."""
++    result = subprocess.run(command, shell=True, capture_output=True, text=True)
++    return result.stdout
++
++
++def check_disk_usage(mount_point: str):
++    """Check disk — vulnerable via subprocess.Popen shell=True."""
++    proc = subprocess.Popen(f"df -h {mount_point}", shell=True, stdout=subprocess.PIPE)
++    output, _ = proc.communicate()
++    return output.decode()
+diff --git a/app/deploy/runner.py b/app/deploy/runner.py
+--- /dev/null
++++ b/app/deploy/runner.py
+@@ -0,0 +1,22 @@
++"""Deployment runner — multiple command injection vectors."""
++import os
++import subprocess
++
++
++def deploy_service(service_name: str, version: str):
++    """Deploy service — os.system with user input."""
++    os.system(f"kubectl set image deployment/{service_name} app={service_name}:{version}")
++
++
++def restart_service(name: str):
++    """Restart — os.popen with variable."""
++    os.popen(f"systemctl restart {name}")
++
++
++def run_migration(db_name: str):
++    """Run DB migration — subprocess.check_output with shell=True."""
++    output = subprocess.check_output(
++        f"python manage.py migrate --database={db_name}",
++        shell=True
++    )
++    return output

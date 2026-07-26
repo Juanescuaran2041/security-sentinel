@@ -176,3 +176,25 @@ class StaticAnalysisResult(BaseModel):
 
     findings: list[CandidateFinding] = Field(default_factory=list)
     errores_parciales: list[dict[str, str]] = Field(default_factory=list)
+
+
+class CVEFinding(BaseModel):
+    """Hallazgo de vulnerabilidad CVE retornado por el servidor MCP CVE_Lookup."""
+
+    cve_id: str
+    paquete: str
+    version: str
+    ecosistema: str
+    severidad: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW", "NONE"]
+    descripcion: str
+    referencias: list[str]
+
+
+class ErrorFinding(BaseModel):
+    """Error estructurado retornado por el servidor MCP CVE_Lookup en casos de fallo."""
+
+    tipo: Literal["error_input", "error_lookup", "limit_exceeded"]
+    paquete: str
+    version: str
+    ecosistema: str
+    error_descripcion: str

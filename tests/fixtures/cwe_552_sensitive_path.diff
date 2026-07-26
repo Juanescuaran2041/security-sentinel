@@ -1,0 +1,69 @@
+diff --git a/app/utils/file_reader.py b/app/utils/file_reader.py
+--- a/app/utils/file_reader.py
++++ b/app/utils/file_reader.py
+@@ -1,5 +1,35 @@
+-def read_file(path: str) -> str:
+-    with open(path) as f:
+-        return f.read()
++"""File reader utilities — sensitive path references."""
++
++
++def read_system_users():
++    """Read users — vulnerable: /etc/passwd reference."""
++    with open("/etc/passwd") as f:
++        return f.readlines()
++
++
++def read_shadow_file():
++    """Read shadow — vulnerable: /etc/shadow reference."""
++    with open("/etc/shadow") as f:
++        return f.readlines()
++
++
++def read_ssh_key(username: str):
++    """Read SSH key — vulnerable: ~/.ssh/ reference."""
++    key_path = f"~/.ssh/id_rsa"
++    with open(key_path) as f:
++        return f.read()
++
++
++def get_environment_vars():
++    """Read env — vulnerable: /proc/self/environ reference."""
++    with open("/proc/self/environ") as f:
++        return f.read()
++
++
++def read_ssl_private_key(domain: str):
++    """Read SSL key — vulnerable: /etc/ssl/private reference."""
++    path = f"/etc/ssl/private/{domain}.key"
++    with open(path) as f:
++        return f.read()
+diff --git a/app/deploy/backup.py b/app/deploy/backup.py
+--- /dev/null
++++ b/app/deploy/backup.py
+@@ -0,0 +1,25 @@
++"""Backup utilities — multiple sensitive path references."""
++import shutil
++
++
++def backup_ssh_keys():
++    """Backup SSH keys — vulnerable: ~/.ssh/ path."""
++    shutil.copytree("~/.ssh/", "/backup/ssh_keys/")
++
++
++def backup_sudoers():
++    """Backup sudoers — vulnerable: /etc/sudoers reference."""
++    shutil.copy2("/etc/sudoers", "/backup/sudoers.bak")
++
++
++def export_rsa_key():
++    """Export RSA key — vulnerable: id_rsa reference."""
++    with open("/home/deploy/.ssh/id_rsa") as f:
++        return f.read()
++
++
++def read_server_cert():
++    """Read cert — vulnerable: .pem file reference."""
++    cert_path = "/opt/certs/server.pem"
++    with open(cert_path) as f:
++        return f.read()

@@ -1,0 +1,58 @@
+{
+  "name": "elevated",
+  "description": "Agente con permisos elevados para operaciones de infraestructura, despliegue y gestión de recursos AWS. Requiere confirmación explícita antes de operaciones destructivas.",
+  "prompt": "Eres un agente con permisos elevados para gestión de infraestructura y despliegue. Tienes acceso completo a AWS, puedes escribir en cualquier parte del proyecto y ejecutar cualquier comando del sistema. REGLA CRÍTICA: antes de ejecutar cualquier operación destructiva (eliminar recursos, borrar archivos, modificar IAM, cambios en producción), debes pedir confirmación explícita al usuario describiendo exactamente qué vas a hacer y qué impacto tendrá. Nunca asumas autorización implícita para acciones de alto riesgo.",
+  "tools": ["read", "write", "shell", "code", "use_aws", "grep"],
+  "allowedTools": ["read", "write", "shell", "code", "use_aws", "grep"],
+  "toolsSettings": {
+    "use_aws": {
+      "allowedServices": [
+        "s3:*",
+        "lambda:*",
+        "ec2:*",
+        "iam:*",
+        "cloudformation:*",
+        "cloudwatch:*",
+        "logs:*",
+        "ecr:*",
+        "ecs:*",
+        "apigateway:*",
+        "bedrock:*",
+        "secretsmanager:*",
+        "ssm:*"
+      ],
+      "deniedServices": [],
+      "autoAllowReadonly": true,
+      "requireConfirmationFor": [
+        "iam:delete-*",
+        "iam:detach-*",
+        "s3:delete-*",
+        "lambda:delete-*",
+        "ec2:terminate-*",
+        "cloudformation:delete-*",
+        "ecr:delete-*"
+      ]
+    },
+    "write": {
+      "allowedPaths": ["**"],
+      "deniedPaths": [],
+      "requireConfirmationFor": [
+        "./.env*",
+        "./secrets/**",
+        "./.aws/**",
+        "./infra/**"
+      ]
+    },
+    "shell": {
+      "allowedCommands": ["*"],
+      "autoAllowReadonly": true,
+      "requireConfirmationFor": [
+        "rm -rf",
+        "drop",
+        "DELETE",
+        "terraform destroy",
+        "cdk destroy"
+      ]
+    }
+  }
+}
