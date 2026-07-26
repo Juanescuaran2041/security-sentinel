@@ -97,9 +97,7 @@ def _extract_references(vuln: dict) -> list[str]:
     return refs
 
 
-def _parse_vulns(
-    vulns: list[dict], package: str, version: str, ecosystem: str
-) -> list[CVEFinding]:
+def _parse_vulns(vulns: list[dict], package: str, version: str, ecosystem: str) -> list[CVEFinding]:
     """Convierte la lista de vulns OSV en objetos CVEFinding."""
     findings: list[CVEFinding] = []
     for vuln in vulns:

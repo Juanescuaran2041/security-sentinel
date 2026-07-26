@@ -40,27 +40,25 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
   - [x] 4.4 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 5: Invariante de truncación de diff** — `st.integers(min_value=9990, max_value=15000)` como conteo de líneas — verificar que `diff_truncated=True` y que ningún `CandidateFinding.linea_inicio` referencia contenido más allá del límite de truncación
     - Validates: Requirements 2.6
 
-- [ ] 5. KB_Retriever — ChromaKBAdapter y base de conocimiento
+- [x] 5. KB_Retriever — ChromaKBAdapter y base de conocimiento
   - [x] 5.1 Crear la base de conocimiento en `security_pr_guardian/knowledge_base/`: 10 archivos Markdown para OWASP Top 10 2025 (`owasp_top10_2025/A01.md`–`A10.md`), 7 archivos de descripción + remediación de CWE (`cwes/CWE-89.md`, 78, 79, 502, 798, 327, 552), y al menos 20 casos históricos en `historical_cases/` (snippet vulnerable + snippet corregido + referencia CVE)
   - [x] 5.2 Implementar `ChromaKBAdapter` en `adapters/kb/chroma_adapter.py` implementando `KBRetrievalPort`: indexación en `~/.security-guardian/kb/` con `sentence-transformers/all-MiniLM-L6-v2`, similitud coseno, retorno de top-k con `score_relevancia`; `baja_confianza=True` cuando todos los scores < 0.5; timeout de 5 s con retorno de `[]` y emisión del evento `kb_timeout`
   - [x] 5.3 Escribir tests unitarios del `ChromaKBAdapter`: `baja_confianza=True` cuando todos los scores < 0.5, retorno de lista vacía en timeout, retorno de fragmentos disponibles (<3) con `baja_confianza=True`, `score_relevancia` siempre en [0.0, 1.0]
-  - [ ] 5.4 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 7: KB retorna como máximo top_k fragmentos** — `st.integers(min_value=1, max_value=10)` como `top_k` — verificar que `0 ≤ len(result) ≤ top_k`
+  - [x] 5.4 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 7: KB retorna como máximo top_k fragmentos** — `st.integers(min_value=1, max_value=10)` como `top_k` — verificar que `0 ≤ len(result) ≤ top_k`
     - Validates: Requirements 6.2, 6.7
-  - [ ] 5.5 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 11: score_relevancia siempre en [0.0, 1.0]** — `st.builds(KBFragment, ...)` — verificar que `0.0 ≤ score_relevancia ≤ 1.0`
+  - [x] 5.5 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 11: score_relevancia siempre en [0.0, 1.0]** — `st.builds(KBFragment, ...)` — verificar que `0.0 ≤ score_relevancia ≤ 1.0`
     - Validates: Requirements 6.3
-  - [ ] 5.6 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 12: Fragmentos de baja confianza siempre marcados** — `st.lists(st.floats(min_value=0.0, max_value=0.499))` como lista de scores — verificar que cuando todos los scores < 0.5 cada fragmento tiene `baja_confianza=True`
+  - [x] 5.6 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 12: Fragmentos de baja confianza siempre marcados** — `st.lists(st.floats(min_value=0.0, max_value=0.499))` como lista de scores — verificar que cuando todos los scores < 0.5 cada fragmento tiene `baja_confianza=True`
     - Validates: Requirements 6.4
-  - [ ] 5.7 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 13: Timeout de KB retorna lista vacía** — timeout mockeado, cualquier `CandidateFinding` como input — verificar que la lista retornada tiene longitud 0 y no contiene resultados parciales
+  - [x] 5.7 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 13: Timeout de KB retorna lista vacía** — timeout mockeado, cualquier `CandidateFinding` como input — verificar que la lista retornada tiene longitud 0 y no contiene resultados parciales
     - Validates: Requirements 6.6
 
-- [ ] 6. Adaptadores LLM — BedrockAdapter y AnthropicAdapter
-  - [ ] 6.1 Implementar `BedrockAdapter` en `adapters/llm/bedrock_adapter.py` implementando `LLMReasoningPort`: Bedrock Converse API vía `boto3`, construcción del prompt (SYSTEM + USER) con `finding` y fragmentos KB formateados, parseo de `LLMVerdict` desde JSON, reintentos con backoff exponencial (5 s, 10 s, 20 s) en `ThrottlingException` y `ServiceUnavailableException`, marcado `no_evaluado` en fallo definitivo o JSON inválido
-  - [ ] 6.2 Implementar `AnthropicAdapter` en `adapters/llm/anthropic_adapter.py` implementando `LLMReasoningPort`: misma estructura de prompt que `BedrockAdapter`, reintentos en `RateLimitError` y `APIConnectionError`, marcado `no_evaluado` en `AuthenticationError` o JSON inválido
-  - [ ] 6.3 Escribir tests unitarios del `BedrockAdapter`: construcción correcta del prompt, reintento en `ThrottlingException` (mockeado vía `moto`), `no_evaluado` en fallo definitivo tras 3 reintentos, `no_evaluado` en JSON inválido, `no_evaluado` en campos requeridos faltantes en la respuesta
-  - [ ] 6.4 Escribir tests unitarios del `AnthropicAdapter`: misma estructura de prompt que Bedrock, `no_evaluado` en JSON inválido, reintento en `RateLimitError`
-  - [ ] 6.5 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 10: JSON inválido del LLM siempre produce no_evaluado** — `st.text()` unión `st.builds(dict, ...)` con campos aleatorios faltantes — verificar `disposition: "no_evaluado"` tanto para Bedrock como Anthropic
+- [x] 6. Adaptadores LLM — BedrockAdapter y AnthropicAdapter
+  - [x] 6.1 Implementar `BedrockAdapter` en `adapters/llm/bedrock_adapter.py` implementando `LLMReasoningPort`: Bedrock Converse API vía `boto3`, construcción del prompt (SYSTEM + USER) con `finding` y fragmentos KB formateados, parseo de `LLMVerdict` desde JSON, reintentos con backoff exponencial (5 s, 10 s, 20 s) en `ThrottlingException` y `ServiceUnavailableException`, marcado `no_evaluado` en fallo definitivo o JSON inválido
+  - [x] 6.2 Escribir tests unitarios del `BedrockAdapter`: construcción correcta del prompt, reintento en `ThrottlingException` (mockeado vía `moto`), `no_evaluado` en fallo definitivo tras 3 reintentos, `no_evaluado` en JSON inválido, `no_evaluado` en campos requeridos faltantes en la respuesta
+  - [x] 6.3 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 10: JSON inválido del LLM siempre produce no_evaluado** — `st.text()` unión `st.builds(dict, ...)` con campos aleatorios faltantes — verificar `disposition: "no_evaluado"` para Bedrock
     - Validates: Requirements 5.8
-  - [ ] 6.6 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 6: severidad_ajustada siempre es un valor válido del enum Severity** — `st.builds(ConfirmedFinding, ...)` desde respuesta LLM cruda — verificar que `severidad_ajustada` es exactamente uno de `critical`, `high`, `medium`, `low`, `info`
+  - [x] 6.4 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 6: severidad_ajustada siempre es un valor válido del enum Severity** — `st.builds(ConfirmedFinding, ...)` desde respuesta LLM cruda — verificar que `severidad_ajustada` es exactamente uno de `critical`, `high`, `medium`, `low`, `info`
     - Validates: Requirements 5.4
 
 - [ ] 7. PR_Commenter — GitHubPRCommenterAdapter y plantilla Jinja2

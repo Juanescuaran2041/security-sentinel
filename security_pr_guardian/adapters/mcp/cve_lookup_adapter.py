@@ -23,13 +23,13 @@ class CVELookUpAdapter(CVELookupPort):
 
         results: list[CVEFinding | ErrorFinding] = []
 
-        for dep in limited:
+        for i in limited:
             response = await self._mcp_session.call_tool(
                 "lookup_cve",
                 {
-                    "package": dep.package,
-                    "version": dep.version,
-                    "ecosystem": dep.ecosystem,
+                    "package": i.package,
+                    "version": i.version,
+                    "ecosystem": i.ecosystem,
                 },
             )
 
