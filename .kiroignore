@@ -1,0 +1,39 @@
+
+.env
+# AWS credentials
+.aws/
+aws-credentials*
+credentials
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# Secrets and tokens
+secrets.*
+*secret*
+*token*
+*password*
+*apikey*
+*api_key*
+
+# ChromaDB local data (may contain indexed sensitive content)
+.security-guardian/
+
+# Hypothesis generated test data
+.hypothesis/
+
+# Build artifacts and caches
+__pycache__/
+*.pyc
+*.pyo
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+htmlcov/
+.coverage

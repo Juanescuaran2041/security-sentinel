@@ -62,9 +62,7 @@ no criptografico, ORM con queries parametrizadas), marca es_explotable=false.
 """
 
 
-def _build_user_prompt(
-    finding: CandidateFinding, kb_context: list[KBFragment]
-) -> str:
+def _build_user_prompt(finding: CandidateFinding, kb_context: list[KBFragment]) -> str:
     """Construye el prompt USER con el finding y contexto KB."""
     parts: list[str] = []
 
@@ -112,6 +110,7 @@ def _parse_llm_response(raw_text: str) -> LLMVerdict:
 
     data = json.loads(text)
 
+    #Confirmacion de datos de tipo JSON
     if not isinstance(data, dict):
         raise ValueError(
             f"Se esperaba un objeto JSON, se recibio: {type(data).__name__}"
@@ -193,22 +192,14 @@ class BedrockAdapter(LLMReasoningPort):
         Temperatura de generacion. Default 0.1 para respuestas deterministas.
     """
 
-    def __init__(
-        self,
-        region: str,
-        model_id: str,
-        max_tokens: int = 2048,
-        temperature: float = 0.1,
-    ):
+    def __init__(self, region: str, model_id: str, max_tokens: int = 2048, temperature: float = 0.1,):
         self._region = region
         self._model_id = model_id
         self._max_tokens = max_tokens
         self._temperature = temperature
         self._client = boto3.client("bedrock-runtime", region_name=region)
 
-    async def evaluate_finding(
-        self, finding: CandidateFinding, kb_context: list[KBFragment]
-    ) -> LLMVerdict:
+    async def evaluate_finding(self, finding: CandidateFinding, kb_context: list[KBFragment]) -> LLMVerdict:
         """Evalua un hallazgo candidato usando Bedrock Converse API.
 
         Implementa reintentos con backoff exponencial (5s, 10s, 20s) en
