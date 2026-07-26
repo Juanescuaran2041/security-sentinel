@@ -1,0 +1,108 @@
+<!-- security-pr-guardian -->
+{% if result.diff_truncated %}
+> ⚠️ **Advertencia: diff truncado** — El diff de este PR supera las 10.000 líneas. Solo se analizaron los primeros 10.000 cambios. Es posible que haya vulnerabilidades en el código no analizado.
+{% endif %}
+{% if result.confirmed_findings | selectattr("disposition", "equalto", "incluido") | list | length > 0 or result.confirmed_findings | selectattr("disposition", "equalto", "no_evaluado") | list | length > 0 %}
+## 🔒 Security PR Guardian — Análisis de Seguridad
+
+### Resumen Ejecutivo
+
+| Severidad | Hallazgos |
+|-----------|-----------|
+| 🔴 CRITICAL | {{ result.confirmed_findings | selectattr("disposition", "equalto", "incluido") | selectattr("severidad_ajustada", "equalto", "critical") | list | length }} |
+| 🟠 HIGH     | {{ result.confirmed_findings | selectattr("disposition", "equalto", "incluido") | selectattr("severidad_ajustada", "equalto", "high") | list | length }} |
+| 🟡 MEDIUM   | {{ result.confirmed_findings | selectattr("disposition", "equalto", "incluido") | selectattr("severidad_ajustada", "equalto", "medium") | list | length }} |
+| 🔵 LOW      | {{ result.confirmed_findings | selectattr("disposition", "equalto", "incluido") | selectattr("severidad_ajustada", "equalto", "low") | list | length }} |
+| ⚪ INFO     | {{ result.confirmed_findings | selectattr("disposition", "equalto", "incluido") | selectattr("severidad_ajustada", "equalto", "info") | list | length }} |
+| ⚠️ No evaluado | {{ result.confirmed_findings | selectattr("disposition", "equalto", "no_evaluado") | list | length }} |
+
+**Total confirmados:** {{ result.confirmed_findings | selectattr("disposition", "equalto", "incluido") | list | length }} &nbsp;|&nbsp; **Descartados (falsos positivos):** {{ result.discarded_count }} &nbsp;|&nbsp; **Candidatos evaluados:** {{ result.candidate_count }}
+
+---
+
+### Tabla de Hallazgos
+
+| Severidad | Tipo | Archivo:Línea | CVE/CWE |
+|-----------|------|---------------|---------|
+{% for finding in result.confirmed_findings %}{% if finding.disposition == "incluido" %}
+| {% if finding.severidad_ajustada.value == "critical" %}🔴 CRITICAL{% elif finding.severidad_ajustada.value == "high" %}🟠 HIGH{% elif finding.severidad_ajustada.value == "medium" %}🟡 MEDIUM{% elif finding.severidad_ajustada.value == "low" %}🔵 LOW{% else %}⚪ INFO{% endif %} | {{ finding.tipo_vulnerabilidad }} | `{{ finding.archivo }}:{{ finding.linea_inicio }}` | {{ finding.cve_id if finding.cve_id else (finding.cwe_id if finding.cwe_id else "—") }} |
+{% endif %}{% endfor %}{% for finding in result.confirmed_findings %}{% if finding.disposition == "no_evaluado" %}
+| ⚠️ No evaluado | {{ finding.tipo_vulnerabilidad }} | `{{ finding.archivo }}:{{ finding.linea_inicio }}` | {{ finding.cve_id if finding.cve_id else (finding.cwe_id if finding.cwe_id else "—") }} |
+{% endif %}{% endfor %}
+
+---
+
+### Detalle de Hallazgos
+{% for finding in result.confirmed_findings %}
+{% if finding.disposition == "incluido" %}
+<details>
+<summary>
+
+{% if finding.severidad_ajustada.value == "critical" %}🔴 CRITICAL{% elif finding.severidad_ajustada.value == "high" %}🟠 HIGH{% elif finding.severidad_ajustada.value == "medium" %}🟡 MEDIUM{% elif finding.severidad_ajustada.value == "low" %}🔵 LOW{% else %}⚪ INFO{% endif %} — **{{ finding.tipo_vulnerabilidad }}** en `{{ finding.archivo }}:{{ finding.linea_inicio }}`{% if finding.cve_id %} ({{ finding.cve_id }}){% elif finding.cwe_id %} ({{ finding.cwe_id }}){% endif %}
+
+</summary>
+
+#### Fragmento de Código
+
+```
+{{ finding.fragmento_codigo }}
+```
+
+#### Justificación
+
+{{ finding.justificacion }}
+
+#### Recomendación
+
+{{ finding.recomendacion.descripcion }}
+
+{% if finding.recomendacion.codigo_corregido %}
+**Código corregido:**
+
+```
+{{ finding.recomendacion.codigo_corregido }}
+```
+{% endif %}
+
+{% if finding.recomendacion.referencia %}
+**Referencia:** {{ finding.recomendacion.referencia }}
+{% endif %}
+
+</details>
+
+{% elif finding.disposition == "no_evaluado" %}
+<details>
+<summary>
+
+⚠️ **No evaluado** — **{{ finding.tipo_vulnerabilidad }}** en `{{ finding.archivo }}:{{ finding.linea_inicio }}`{% if finding.cve_id %} ({{ finding.cve_id }}){% elif finding.cwe_id %} ({{ finding.cwe_id }}){% endif %}
+
+</summary>
+
+> ⚠️ Este hallazgo no pudo ser evaluado por el agente LLM (fallo de servicio o parseo). Se recomienda revisión manual.
+
+#### Fragmento de Código
+
+```
+{{ finding.fragmento_codigo }}
+```
+
+</details>
+
+{% endif %}
+{% endfor %}
+{% else %}
+## ✅ Security PR Guardian — Sin Vulnerabilidades Detectadas
+
+No se detectaron vulnerabilidades explotables en este Pull Request.
+
+| Métrica | Valor |
+|---------|-------|
+| Hallazgos candidatos evaluados | {{ result.candidate_count }} |
+| Descartados como falsos positivos | {{ result.discarded_count }} |
+| Timestamp del análisis (UTC) | {{ result.timestamp_utc.strftime("%Y-%m-%dT%H:%M:%SZ") }} |
+
+{% endif %}
+
+---
+
+<sub>Security PR Guardian v{{ result.guardian_version }} &nbsp;·&nbsp; Modelo: `{{ result.model_id }}` &nbsp;·&nbsp; Duración: {{ "%.1f"|format(result.duration_seconds) }}s &nbsp;·&nbsp; ID: `{{ result.analysis_id }}`</sub>
