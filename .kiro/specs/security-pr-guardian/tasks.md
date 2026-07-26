@@ -33,11 +33,11 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
   - [x] 3.5 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 8: Límite de dependencias aplicado** — `st.integers(min_value=51, max_value=200)` como conteo de dependencias — verificar que se consultan exactamente las primeras 50 y que el resultado contiene un finding `limit_exceeded`
     - Validates: Requirements 4.6
 
-- [ ] 4. DiffParser y detección de cambios en manifiestos
-  - [ ] 4.1 Implementar `DiffParser` en `security_pr_guardian/core/diff_parser.py`: extracción de líneas `+` del diff unificado, detección del conjunto canónico de manifiestos (`package.json`, `requirements.txt`, `Pipfile`, `Pipfile.lock`, `pyproject.toml`, `poetry.lock`, `Cargo.toml`, `Cargo.lock`, `go.mod`, `go.sum`, `pom.xml`, `build.gradle`, `vcpkg.json`, `package-lock.json`, `yarn.lock`), extracción de `DependencyChange`, truncación del diff a `max_diff_lines` con activación del flag `diff_truncated`
-  - [ ] 4.2 Implementar `GitHubDiffAdapter` en `adapters/github/diff_adapter.py` implementando `DiffExtractionPort`: llamada a la API REST de GitHub para obtener el diff, reintentos con backoff exponencial (2 s, 4 s, 8 s), evento `analysis_failed` tras 3 reintentos agotados
-  - [ ] 4.3 Escribir tests unitarios del `DiffParser`: detección correcta de manifiestos, extracción de dependencias modificadas, truncación a 10 000 líneas con `diff_truncated=True`, sin análisis CVE cuando no hay manifiestos
-  - [ ] 4.4 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 5: Invariante de truncación de diff** — `st.integers(min_value=9990, max_value=15000)` como conteo de líneas — verificar que `diff_truncated=True` y que ningún `CandidateFinding.linea_inicio` referencia contenido más allá del límite de truncación
+- [x] 4. DiffParser y detección de cambios en manifiestos
+  - [x] 4.1 Implementar `DiffParser` en `security_pr_guardian/core/diff_parser.py`: extracción de líneas `+` del diff unificado, detección del conjunto canónico de manifiestos (`package.json`, `requirements.txt`, `Pipfile`, `Pipfile.lock`, `pyproject.toml`, `poetry.lock`, `Cargo.toml`, `Cargo.lock`, `go.mod`, `go.sum`, `pom.xml`, `build.gradle`, `vcpkg.json`, `package-lock.json`, `yarn.lock`), extracción de `DependencyChange`, truncación del diff a `max_diff_lines` con activación del flag `diff_truncated`
+  - [x] 4.2 Implementar `GitHubDiffAdapter` en `adapters/github/diff_adapter.py` implementando `DiffExtractionPort`: llamada a la API REST de GitHub para obtener el diff, reintentos con backoff exponencial (2 s, 4 s, 8 s), evento `analysis_failed` tras 3 reintentos agotados
+  - [x] 4.3 Escribir tests unitarios del `DiffParser`: detección correcta de manifiestos, extracción de dependencias modificadas, truncación a 10 000 líneas con `diff_truncated=True`, sin análisis CVE cuando no hay manifiestos
+  - [x] 4.4 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 5: Invariante de truncación de diff** — `st.integers(min_value=9990, max_value=15000)` como conteo de líneas — verificar que `diff_truncated=True` y que ningún `CandidateFinding.linea_inicio` referencia contenido más allá del límite de truncación
     - Validates: Requirements 2.6
 
 - [ ] 5. KB_Retriever — ChromaKBAdapter y base de conocimiento
