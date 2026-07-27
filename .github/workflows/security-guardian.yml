@@ -1,0 +1,41 @@
+name: Security PR Guardian
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  security-analysis:
+    name: Analyze PR for security vulnerabilities
+    runs-on: ubuntu-latest
+    # Solo correr en PRs, no en pushes directos a ramas
+    if: github.event_name == 'pull_request'
+
+    permissions:
+      contents: read        # Leer el código del PR
+      pull-requests: write  # Publicar el comentario con los hallazgos
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.BEDROCK_REGION }}
+          # Si usas IAM roles en lugar de keys estáticas, usa role-to-assume:
+          # role-to-assume: arn:aws:iam::123456789012:role/SecurityGuardianRole
+
+      - name: Run Security PR Guardian
+        uses: Juanescuaran2041/security-sentinel@v0.1.0
+        with:
+          repo: ${{ github.repository }}
+          pr-number: ${{ github.event.pull_request.number }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          bedrock-region: ${{ secrets.BEDROCK_REGION }}
+          bedrock-model-id: ${{ secrets.BEDROCK_MODEL_ID }}
+        # El step falla con exit code 1 si hay vulnerabilidades explotables.
+        # Cambia a continue-on-error: true si quieres que el PR no se bloquee.
+        # continue-on-error: true

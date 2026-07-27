@@ -20,20 +20,6 @@ import asyncio
 from pathlib import Path
 from typing import Optional
 
-# chromadb and sentence_transformers are heavy optional dependencies.
-# Import them lazily inside _ensure_initialized() so that:
-# 1. Tests can mock them without needing the real packages installed.
-# 2. The module-level import does not slow down CLI startup.
-try:
-    import chromadb as _chromadb_module
-except ImportError:  # pragma: no cover
-    _chromadb_module = None  # type: ignore[assignment]
-
-try:
-    from sentence_transformers import SentenceTransformer as _SentenceTransformer
-except ImportError:  # pragma: no cover
-    _SentenceTransformer = None  # type: ignore[assignment]
-
 from security_pr_guardian.core.models import CandidateFinding, KBFragment
 from security_pr_guardian.core.logger import StructuredLogger
 from security_pr_guardian.ports.kb_retrieval import KBRetrievalPort
@@ -90,6 +76,11 @@ class ChromaKBAdapter(KBRetrievalPort):
         if self._initialized:
             return
 
+        # Lazy imports — deferred so module-level import never touches these
+        # heavy packages. Tests can mock _ensure_initialized entirely.
+        import chromadb as _chromadb_module  # noqa: PLC0415
+        from sentence_transformers import SentenceTransformer as _SentenceTransformer  # noqa: PLC0415
+
         # Crear directorio de persistencia si no existe
         KB_PERSIST_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -97,10 +88,7 @@ class ChromaKBAdapter(KBRetrievalPort):
         self._model = _SentenceTransformer(EMBEDDING_MODEL)
 
         # Inicializar cliente ChromaDB persistente con distancia coseno
-        #Client es el handle de persistencia para interactuar con la base de datos
         self._client = _chromadb_module.PersistentClient(path=str(KB_PERSIST_DIR))
-        #El get or create hace que si existe el collecion la carga sino create una nueva
-        #La distancia coseno se usa para medir similitud entre embeddings
         self._collection = self._client.get_or_create_collection(
             name=COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"},

@@ -10,10 +10,9 @@ Requisitos cubiertos:
   - errores_parciales incluye errores por archivo detectados por PatternEngine.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
@@ -30,7 +29,7 @@ _engine = PatternEngine()
 
 
 @mcp.tool()
-async def analyze_diff(diff: str) -> StaticAnalysisResult:
+async def analyze_diff(diff: str) -> Any:
     """Analiza un diff unificado en busca de patrones de vulnerabilidad.
 
     Ejecuta PatternEngine sobre las líneas añadidas del diff y retorna
@@ -42,14 +41,15 @@ async def analyze_diff(diff: str) -> StaticAnalysisResult:
         diff: Diff unificado completo (formato git diff / GitHub PR diff).
 
     Returns:
-        StaticAnalysisResult con findings candidatos y errores parciales.
+        StaticAnalysisResult serializado con findings candidatos y errores
+        parciales.
     """
     try:
-        result = await asyncio.wait_for(
+        result: StaticAnalysisResult = await asyncio.wait_for(
             asyncio.to_thread(_engine.analyze, diff),
             timeout=ANALYSIS_TIMEOUT_SECONDS,
         )
-        return result
+        return result.model_dump()
     except asyncio.TimeoutError:
         logger.error(
             "Análisis estático excedió el timeout de %d s",
@@ -66,7 +66,7 @@ async def analyze_diff(diff: str) -> StaticAnalysisResult:
                     ),
                 }
             ],
-        )
+        ).model_dump()
     except Exception as exc:
         logger.exception("Error inesperado en analyze_diff")
         return StaticAnalysisResult(
@@ -77,7 +77,7 @@ async def analyze_diff(diff: str) -> StaticAnalysisResult:
                     "error": f"Error inesperado: {exc}",
                 }
             ],
-        )
+        ).model_dump()
 
 
 if __name__ == "__main__":

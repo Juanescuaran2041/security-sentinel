@@ -96,35 +96,35 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
   - [x] 10.7 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 15: La salida JSON del CLI siempre es JSON parseable válido** — `st.builds(AnalysisResult, ...)` renderizado por el formateador CLI — verificar que los bytes en stdout se deserializan a JSON válido con las claves `analysis_id`, `confirmed_count`, `discarded_count`, `confirmed_findings` y `diff_truncated`
     - Validates: Requirements 1.8
 
-- [ ] 14. Team Profile — perfil de equipo adaptable
+- [x] 14. Team Profile — perfil de equipo adaptable
   - [x] 14.1 Crear el modelo Pydantic `TeamProfile` en `security_pr_guardian/core/models.py` con los campos: `frameworks` (list[str], default []), `auth_libraries` (list[str], default []), `allowed_patterns` (list[AllowedPattern], default []), `min_severity` (Severity, default LOW), `custom_exceptions` (list[str], default []) — y el modelo `AllowedPattern` con `cwe_id` (str) y `razon` (str)
   - [x] 14.2 Implementar `TeamProfileLoader` en `security_pr_guardian/core/team_profile.py`: buscar `.security-guardian.yml` en cwd, parsear con `yaml.safe_load()`, validar con `TeamProfile`, retornar instancia con defaults en caso de archivo ausente o YAML inválido (sin lanzar excepciones), emitir warning al logger cuando el perfil falla
   - [x] 14.3 Extender `BedrockAdapter` para aceptar `team_profile: TeamProfile | None` en `evaluate_finding` e inyectar la sección `## Perfil del Equipo` en el prompt USER cuando el perfil tiene contenido (frameworks, allowed_patterns, custom_exceptions no vacíos)
-  - [ ] 14.4 Implementar `security-guardian init --profile` en el CLI: cuestionario interactivo con Rich prompts (frameworks, auth_libraries, allowed_patterns, min_severity, custom_exceptions), generación de `.security-guardian.yml`, confirmación antes de sobreescribir si el archivo ya existe
-  - [] 14.5 Implementar el flag `--auto-detect` para `security-guardian init --profile`: escanear `requirements.txt`, `package.json`, `pyproject.toml`, `Cargo.toml` para detectar frameworks; detectar librerías de auth por presencia de nombres conocidos (`bcrypt`, `argon2`, `passlib`, `django-allauth`, `passport`, `jose`); inferir `min_severity` desde `.bandit` o `ruff.toml` si existen; usar valores detectados como defaults en el cuestionario
+  - [x] 14.4 Implementar `security-guardian init --profile` en el CLI: cuestionario interactivo con Rich prompts (frameworks, auth_libraries, allowed_patterns, min_severity, custom_exceptions), generación de `.security-guardian.yml`, confirmación antes de sobreescribir si el archivo ya existe
+  - [x] 14.5 Implementar el flag `--auto-detect` para `security-guardian init --profile`: escanear `requirements.txt`, `package.json`, `pyproject.toml`, `Cargo.toml` para detectar frameworks; detectar librerías de auth por presencia de nombres conocidos (`bcrypt`, `argon2`, `passlib`, `django-allauth`, `passport`, `jose`); inferir `min_severity` desde `.bandit` o `ruff.toml` si existen; usar valores detectados como defaults en el cuestionario
   - [x] 14.6 Escribir tests unitarios del `TeamProfileLoader`: carga correcta desde YAML válido, degradación a defaults en YAML inválido, degradación a defaults cuando el archivo no existe, warning emitido en ambos casos de falla, ningún test lanza excepción no manejada
   - [x] 14.7 Escribir tests unitarios del prompt con `TeamProfile`: sección `## Perfil del Equipo` presente en el prompt cuando el perfil tiene contenido, sección ausente cuando el perfil está vacío (todos defaults), `allowed_patterns` formateados correctamente en el prompt
   - [x] 14.8 Escribir tests unitarios del auto-detect: detección correcta de frameworks desde fixtures de `requirements.txt` y `package.json`, detección de librerías de auth, no-crash cuando los archivos no existen
 
-- [ ] 11. Tests de integración end-to-end
+- [x] 11. Tests de integración end-to-end
   - [x] 11.1 Escribir test de integración — happy path completo: diff con inyección SQL + una dependencia vulnerable → finding confirmado en comentario del PR (todos los servicios externos mockeados con `pytest-httpx` y `moto`)
   - [x] 11.2 Escribir test de integración — análisis CVE omitido cuando no hay manifiestos de dependencias en el diff
   - [x] 11.3 Escribir test de integración — throttling de Bedrock: tras 3 reintentos, finding marcado `no_evaluado` con advertencia visible en comentario
   - [x] 11.4 Escribir test de integración — truncación de diff: diff con más de 10 000 líneas → `diff_truncated=True`, advertencia en comentario, sin finding más allá de la línea 10 000
-  - [~] 11.5 Escribir test de integración — comentario PR existente: mock de GitHub retorna comentario con marca de agua → adaptador usa PATCH en lugar de POST
-  - [~] 11.6 Escribir test de integración — `llm_backend: anthropic`: pipeline completo con `AnthropicAdapter` activo (API mockeada)
+  - [x] 11.5 Escribir test de integración — comentario PR existente: mock de GitHub retorna comentario con marca de agua → adaptador usa PATCH en lugar de POST
 
-- [ ] 12. Distribución, configuración y documentación
-  - [ ] 12.1 Configurar `pyproject.toml` para distribución PyPI: nombre del paquete `security-pr-guardian`, entry point `security-guardian = security_pr_guardian.cli.main:cli`, dependencias pinned en `requirements.txt`
-  - [ ] 12.2 Crear `action.yml` en la raíz para la GitHub Action: inputs (`repo`, `pr-number`, `github-token`, `bedrock-region`, `bedrock-model-id`), runs usando `python -m security_pr_guardian.cli.main check`
-  - [ ] 12.3 Crear `.github/workflows/security-guardian.yml` con ejemplo de uso como step de CI/CD incluyendo configuración de secrets
-  - [ ] 12.4 Completar el `README.md` con las secciones obligatorias: descripción y requisitos previos, instalación vía `pip install security-pr-guardian`, configuración de `GITHUB_TOKEN` y credenciales AWS, uso de `security-guardian check`, integración como GitHub Action con ejemplo de workflow YAML
-  - [ ] 12.5 Crear `.env.example` con todas las variables de entorno requeridas y sus descripciones
+
+- [x] 12. Distribución, configuración y documentación
+  - [x] 12.1 Configurar `pyproject.toml` para distribución PyPI: nombre del paquete `security-pr-guardian`, entry point `security-guardian = security_pr_guardian.cli.main:cli`, dependencias pinned en `requirements.txt`
+  - [x] 12.2 Crear `action.yml` en la raíz para la GitHub Action: inputs (`repo`, `pr-number`, `github-token`, `bedrock-region`, `bedrock-model-id`), runs usando `python -m security_pr_guardian.cli.main check`
+  - [x] 12.3 Crear `.github/workflows/security-guardian.yml` con ejemplo de uso como step de CI/CD incluyendo configuración de secrets
+  - [x] 12.4 Completar el `README.md` con las secciones obligatorias: descripción y requisitos previos, instalación vía `pip install security-pr-guardian`, configuración de `GITHUB_TOKEN` y credenciales AWS, uso de `security-guardian check`, integración como GitHub Action con ejemplo de workflow YAML
+  - [x] 12.5 Crear `.env.example` con todas las variables de entorno requeridas y sus descripciones
   - [ ] 12.6 Crear plantillas de infraestructura como código en `infra/` (AWS CDK o CloudFormation) para despliegue en Lambda o ECS
 
-- [ ] 13. Configuración de CI y cobertura
-  - [ ] 13.1 Crear `.github/workflows/ci.yml` que ejecute `pytest --cov=security_pr_guardian --cov-fail-under=80` en cada PR, incluyendo las tres capas de tests con `moto` y `pytest-httpx`; ningún test corre contra infraestructura real
-  - [ ] 13.2 Verificar que la cobertura cumple los umbrales: ≥ 80% en `security_pr_guardian/core/`, ≥ 80% en `security_pr_guardian/adapters/`, ≥ 70% en `security_pr_guardian/cli/`
+- [x] 13. Configuración de CI y cobertura
+  - [x] 13.1 Crear `.github/workflows/ci.yml` que ejecute `pytest --cov=security_pr_guardian --cov-fail-under=80` en cada PR, incluyendo las tres capas de tests con `moto` y `pytest-httpx`; ningún test corre contra infraestructura real
+  - [x] 13.2 Verificar que la cobertura cumple los umbrales: ≥ 80% en `security_pr_guardian/core/`, ≥ 80% en `security_pr_guardian/adapters/`, ≥ 70% en `security_pr_guardian/cli/`
 
 ## Task Dependency Graph
 
