@@ -21,7 +21,7 @@ pip install security-pr-guardian
 ```bash
 export GITHUB_TOKEN=ghp_...              # Token GitHub
 export BEDROCK_REGION=us-east-1          # Región AWS de Bedrock
-export BEDROCK_MODEL_ID=anthropic.claude-3-5-haiku-20241022-v1:0
+export BEDROCK_MODEL_ID=anthropic.claude-sonnet-4-20250514-v1:0
 ```
 
 Copia `.env.example` como `.env` y rellena los valores:

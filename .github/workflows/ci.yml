@@ -1,0 +1,91 @@
+name: CI — Tests & Coverage
+
+on:
+  pull_request:
+    branches: ["main", "master"]
+  push:
+    branches: ["main", "master"]
+
+jobs:
+  test:
+    name: pytest + coverage
+    runs-on: ubuntu-latest
+
+    env:
+      # Fake AWS credentials so moto never tries to reach real AWS
+      AWS_ACCESS_KEY_ID: "testing"
+      AWS_SECRET_ACCESS_KEY: "testing"
+      AWS_SECURITY_TOKEN: "testing"
+      AWS_SESSION_TOKEN: "testing"
+      AWS_DEFAULT_REGION: "us-east-1"
+      # Fake GitHub token — no real API calls in tests
+      GITHUB_TOKEN: "ghp_fake_token_for_tests"
+      # Fake Bedrock config
+      BEDROCK_REGION: "us-east-1"
+      BEDROCK_MODEL_ID: "anthropic.claude-3-5-sonnet-20241022-v2:0"
+      # Disable any accidental network calls to OSV.dev or Anthropic
+      ANTHROPIC_API_KEY: "sk-ant-fake-key-for-tests"
+      # Prevent chromadb from trying to reach remote telemetry
+      ANONYMIZED_TELEMETRY: "False"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          # Install the package itself in editable mode
+          pip install -e .
+
+      # ── Full test suite with global coverage threshold ────────────────────
+      - name: Run tests (global coverage ≥ 80 %)
+        run: |
+          pytest \
+            --cov=security_pr_guardian \
+            --cov-fail-under=80 \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term-missing \
+            -v
+
+      # ── Per-module coverage checks ────────────────────────────────────────
+      - name: Check coverage — core/ (≥ 80 %)
+        run: |
+          pytest \
+            --cov=security_pr_guardian/core \
+            --cov-fail-under=80 \
+            --cov-report=term-missing \
+            --no-header -q
+
+      - name: Check coverage — adapters/ (≥ 80 %)
+        run: |
+          pytest \
+            --cov=security_pr_guardian/adapters \
+            --cov-fail-under=80 \
+            --cov-report=term-missing \
+            --no-header -q
+
+      - name: Check coverage — cli/ (≥ 70 %)
+        run: |
+          pytest \
+            --cov=security_pr_guardian/cli \
+            --cov-fail-under=70 \
+            --cov-report=term-missing \
+            --no-header -q
+
+      # ── Upload full coverage report as artifact ───────────────────────────
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 14

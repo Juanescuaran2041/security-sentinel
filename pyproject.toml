@@ -63,7 +63,31 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["security_pr_guardian"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+]
 
 [tool.coverage.report]
+# Global threshold — enforced by `pytest --cov-fail-under=80`
+# Per-module thresholds enforced in .github/workflows/ci.yml:
+#   security_pr_guardian/core/      ≥ 80 %
+#   security_pr_guardian/adapters/  ≥ 80 %
+#   security_pr_guardian/cli/       ≥ 70 %
 fail_under = 80
 show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.coverage.paths]
+# Canonical source roots for combining coverage across environments
+source = [
+    "security_pr_guardian/",
+    "*/security_pr_guardian/",
+]

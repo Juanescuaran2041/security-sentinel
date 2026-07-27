@@ -114,17 +114,17 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
   - [ ] 11.5 Escribir test de integración — comentario PR existente: mock de GitHub retorna comentario con marca de agua → adaptador usa PATCH en lugar de POST
   - [ ] 11.6 Escribir test de integración — `llm_backend: anthropic`: pipeline completo con `AnthropicAdapter` activo (API mockeada)
 
-- [ ] 12. Distribución, configuración y documentación
-  - [ ] 12.1 Configurar `pyproject.toml` para distribución PyPI: nombre del paquete `security-pr-guardian`, entry point `security-guardian = security_pr_guardian.cli.main:cli`, dependencias pinned en `requirements.txt`
-  - [ ] 12.2 Crear `action.yml` en la raíz para la GitHub Action: inputs (`repo`, `pr-number`, `github-token`, `bedrock-region`, `bedrock-model-id`), runs usando `python -m security_pr_guardian.cli.main check`
-  - [ ] 12.3 Crear `.github/workflows/security-guardian.yml` con ejemplo de uso como step de CI/CD incluyendo configuración de secrets
-  - [ ] 12.4 Completar el `README.md` con las secciones obligatorias: descripción y requisitos previos, instalación vía `pip install security-pr-guardian`, configuración de `GITHUB_TOKEN` y credenciales AWS, uso de `security-guardian check`, integración como GitHub Action con ejemplo de workflow YAML
-  - [ ] 12.5 Crear `.env.example` con todas las variables de entorno requeridas y sus descripciones
+- [x] 12. Distribución, configuración y documentación
+  - [x] 12.1 Configurar `pyproject.toml` para distribución PyPI: nombre del paquete `security-pr-guardian`, entry point `security-guardian = security_pr_guardian.cli.main:cli`, dependencias pinned en `requirements.txt`
+  - [x] 12.2 Crear `action.yml` en la raíz para la GitHub Action: inputs (`repo`, `pr-number`, `github-token`, `bedrock-region`, `bedrock-model-id`), runs usando `python -m security_pr_guardian.cli.main check`
+  - [x] 12.3 Crear `.github/workflows/security-guardian.yml` con ejemplo de uso como step de CI/CD incluyendo configuración de secrets
+  - [x] 12.4 Completar el `README.md` con las secciones obligatorias: descripción y requisitos previos, instalación vía `pip install security-pr-guardian`, configuración de `GITHUB_TOKEN` y credenciales AWS, uso de `security-guardian check`, integración como GitHub Action con ejemplo de workflow YAML
+  - [x] 12.5 Crear `.env.example` con todas las variables de entorno requeridas y sus descripciones
   - [ ] 12.6 Crear plantillas de infraestructura como código en `infra/` (AWS CDK o CloudFormation) para despliegue en Lambda o ECS
 
-- [ ] 13. Configuración de CI y cobertura
-  - [ ] 13.1 Crear `.github/workflows/ci.yml` que ejecute `pytest --cov=security_pr_guardian --cov-fail-under=80` en cada PR, incluyendo las tres capas de tests con `moto` y `pytest-httpx`; ningún test corre contra infraestructura real
-  - [ ] 13.2 Verificar que la cobertura cumple los umbrales: ≥ 80% en `security_pr_guardian/core/`, ≥ 80% en `security_pr_guardian/adapters/`, ≥ 70% en `security_pr_guardian/cli/`
+- [x] 13. Configuración de CI y cobertura
+  - [x] 13.1 Crear `.github/workflows/ci.yml` que ejecute `pytest --cov=security_pr_guardian --cov-fail-under=80` en cada PR, incluyendo las tres capas de tests con `moto` y `pytest-httpx`; ningún test corre contra infraestructura real
+  - [x] 13.2 Verificar que la cobertura cumple los umbrales: ≥ 80% en `security_pr_guardian/core/`, ≥ 80% en `security_pr_guardian/adapters/`, ≥ 70% en `security_pr_guardian/cli/`
 
 ## Task Dependency Graph
 
