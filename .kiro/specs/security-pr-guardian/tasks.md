@@ -79,21 +79,21 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
   - [x] 8.6 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 4: El número de hallazgos enviados al LLM nunca supera min(total_candidatos, 20)** — `st.integers(min_value=0, max_value=100)` como conteo de candidatos — verificar que las invocaciones a `LLMReasoningPort.evaluate_finding` nunca superan `min(len(candidates), 20)`
     - Validates: Requirements 5.6
 
-- [ ] 9. Observabilidad — StructuredLogger y eventos de ciclo de vida
-  - [ ] 9.1 Extender `StructuredLogger` con métodos de conveniencia para los eventos de ciclo de vida: `analysis_complete`, `analysis_failed`, `comment_publish_failed`, `diff_truncated`, `kb_timeout`, `llm_parse_failure` y eventos de finding (`finding_id`, `es_explotable`, `severidad_ajustada`, `justificacion`, `disposition`)
-  - [ ] 9.2 Verificar que `duracion_ms` está presente si y solo si el evento representa una operación completada con inicio y fin medibles (ausente en eventos de solo-inicio)
-  - [ ] 9.3 Escribir tests unitarios del logger: campos base requeridos en todo evento, `duracion_ms` presente solo cuando corresponde, evento `analysis_complete` con todos los conteos requeridos
-  - [ ] 9.4 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 14: Los eventos de log siempre contienen los campos base requeridos** — `st.builds(LogEvent, ...)` con valores aleatorios — verificar que `timestamp`, `analysis_id`, `componente`, `evento` y `detalle` están siempre presentes
+- [x] 9. Observabilidad — StructuredLogger y eventos de ciclo de vida
+  - [x] 9.1 Extender `StructuredLogger` con métodos de conveniencia para los eventos de ciclo de vida: `analysis_complete`, `analysis_failed`, `comment_publish_failed`, `diff_truncated`, `kb_timeout`, `llm_parse_failure` y eventos de finding (`finding_id`, `es_explotable`, `severidad_ajustada`, `justificacion`, `disposition`)
+  - [x] 9.2 Verificar que `duracion_ms` está presente si y solo si el evento representa una operación completada con inicio y fin medibles (ausente en eventos de solo-inicio)
+  - [x] 9.3 Escribir tests unitarios del logger: campos base requeridos en todo evento, `duracion_ms` presente solo cuando corresponde, evento `analysis_complete` con todos los conteos requeridos
+  - [x] 9.4 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 14: Los eventos de log siempre contienen los campos base requeridos** — `st.builds(LogEvent, ...)` con valores aleatorios — verificar que `timestamp`, `analysis_id`, `componente`, `evento` y `detalle` están siempre presentes
     - Validates: Requirements 9.2
 
-- [ ] 10. CLI — comandos `check` e `init`
-  - [ ] 10.1 Implementar `security_pr_guardian/cli/main.py` con `click` + `rich`: comando `security-guardian check --repo <owner/repo> --pr <number> [--output text|json] [--no-comment]` y comando `security-guardian init`
-  - [ ] 10.2 Implementar la lógica de salida del CLI: salida con colores ANSI (verde en éxito, rojo/amarillo según severidad máxima), tabla de hallazgos con columnas `Severidad`, `Tipo`, `Archivo:Línea`, `CVE/CWE`, omisión de ANSI cuando `NO_COLOR` está presente o `TERM=dumb`
-  - [ ] 10.3 Implementar el flag `--output json`: serialización completa de `AnalysisResult` a JSON en stdout sin salida ANSI
-  - [ ] 10.4 Implementar el comando `security-guardian init`: generación de `.env.example` con todas las variables requeridas y sus descripciones, validación de credenciales del entorno con impresión del resultado por cada verificación
-  - [ ] 10.5 Implementar la validación de configuración al arranque: mensaje estructurado en stderr con nombre exacto de la variable ausente, código de salida 2 antes de iniciar ninguna llamada a la API
-  - [ ] 10.6 Escribir tests unitarios del CLI: código de salida 0 sin hallazgos explotables, código 1 con al menos un hallazgo explotable, código 2 en argumentos inválidos, código 2 en variable obligatoria ausente, `--output json` produce JSON parseable, `--no-comment` omite `PRCommentPort`, ANSI omitido con `NO_COLOR`
-  - [ ] 10.7 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 15: La salida JSON del CLI siempre es JSON parseable válido** — `st.builds(AnalysisResult, ...)` renderizado por el formateador CLI — verificar que los bytes en stdout se deserializan a JSON válido con las claves `analysis_id`, `confirmed_count`, `discarded_count`, `confirmed_findings` y `diff_truncated`
+- [x] 10. CLI — comandos `check` e `init`
+  - [x] 10.1 Implementar `security_pr_guardian/cli/main.py` con `click` + `rich`: comando `security-guardian check --repo <owner/repo> --pr <number> [--output text|json] [--no-comment]` y comando `security-guardian init`
+  - [x] 10.2 Implementar la lógica de salida del CLI: salida con colores ANSI (verde en éxito, rojo/amarillo según severidad máxima), tabla de hallazgos con columnas `Severidad`, `Tipo`, `Archivo:Línea`, `CVE/CWE`, omisión de ANSI cuando `NO_COLOR` está presente o `TERM=dumb`
+  - [x] 10.3 Implementar el flag `--output json`: serialización completa de `AnalysisResult` a JSON en stdout sin salida ANSI
+  - [x] 10.4 Implementar el comando `security-guardian init`: generación de `.env.example` con todas las variables requeridas y sus descripciones, validación de credenciales del entorno con impresión del resultado por cada verificación
+  - [x] 10.5 Implementar la validación de configuración al arranque: mensaje estructurado en stderr con nombre exacto de la variable ausente, código de salida 2 antes de iniciar ninguna llamada a la API
+  - [x] 10.6 Escribir tests unitarios del CLI: código de salida 0 sin hallazgos explotables, código 1 con al menos un hallazgo explotable, código 2 en argumentos inválidos, código 2 en variable obligatoria ausente, `--output json` produce JSON parseable, `--no-comment` omite `PRCommentPort`, ANSI omitido con `NO_COLOR`
+  - [x] 10.7 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 15: La salida JSON del CLI siempre es JSON parseable válido** — `st.builds(AnalysisResult, ...)` renderizado por el formateador CLI — verificar que los bytes en stdout se deserializan a JSON válido con las claves `analysis_id`, `confirmed_count`, `discarded_count`, `confirmed_findings` y `diff_truncated`
     - Validates: Requirements 1.8
 
 - [ ] 14. Team Profile — perfil de equipo adaptable
@@ -107,12 +107,12 @@ El plan de implementación sigue la arquitectura hexagonal (Ports & Adapters) de
   - [x] 14.8 Escribir tests unitarios del auto-detect: detección correcta de frameworks desde fixtures de `requirements.txt` y `package.json`, detección de librerías de auth, no-crash cuando los archivos no existen
 
 - [ ] 11. Tests de integración end-to-end
-  - [ ] 11.1 Escribir test de integración — happy path completo: diff con inyección SQL + una dependencia vulnerable → finding confirmado en comentario del PR (todos los servicios externos mockeados con `pytest-httpx` y `moto`)
-  - [ ] 11.2 Escribir test de integración — análisis CVE omitido cuando no hay manifiestos de dependencias en el diff
-  - [ ] 11.3 Escribir test de integración — throttling de Bedrock: tras 3 reintentos, finding marcado `no_evaluado` con advertencia visible en comentario
-  - [ ] 11.4 Escribir test de integración — truncación de diff: diff con más de 10 000 líneas → `diff_truncated=True`, advertencia en comentario, sin finding más allá de la línea 10 000
-  - [ ] 11.5 Escribir test de integración — comentario PR existente: mock de GitHub retorna comentario con marca de agua → adaptador usa PATCH en lugar de POST
-  - [ ] 11.6 Escribir test de integración — `llm_backend: anthropic`: pipeline completo con `AnthropicAdapter` activo (API mockeada)
+  - [x] 11.1 Escribir test de integración — happy path completo: diff con inyección SQL + una dependencia vulnerable → finding confirmado en comentario del PR (todos los servicios externos mockeados con `pytest-httpx` y `moto`)
+  - [x] 11.2 Escribir test de integración — análisis CVE omitido cuando no hay manifiestos de dependencias en el diff
+  - [x] 11.3 Escribir test de integración — throttling de Bedrock: tras 3 reintentos, finding marcado `no_evaluado` con advertencia visible en comentario
+  - [x] 11.4 Escribir test de integración — truncación de diff: diff con más de 10 000 líneas → `diff_truncated=True`, advertencia en comentario, sin finding más allá de la línea 10 000
+  - [~] 11.5 Escribir test de integración — comentario PR existente: mock de GitHub retorna comentario con marca de agua → adaptador usa PATCH en lugar de POST
+  - [~] 11.6 Escribir test de integración — `llm_backend: anthropic`: pipeline completo con `AnthropicAdapter` activo (API mockeada)
 
 - [x] 12. Distribución, configuración y documentación
   - [x] 12.1 Configurar `pyproject.toml` para distribución PyPI: nombre del paquete `security-pr-guardian`, entry point `security-guardian = security_pr_guardian.cli.main:cli`, dependencias pinned en `requirements.txt`

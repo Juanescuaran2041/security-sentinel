@@ -367,29 +367,22 @@ async def test_property_analysis_id_is_uuid_v4():
 def test_property_analysis_id_uuid_v4_multiple_runs(n_findings: int):
     """
     Property 2 (PBT): Para cualquier número de findings, el analysis_id
-    en los logs siempre es UUID v4 válido. Capturamos stderr donde el
-    StructuredLogger escribe por defecto.
+    en los logs siempre es UUID v4 válido. Capturamos la salida del logger
+    proporcionado al agente.
     """
     import asyncio
     import json as _json
-    import sys
 
     candidates = [make_candidate() for _ in range(n_findings)]
-    agent, _ = build_agent(sast_findings=candidates)
+    log_output = io.StringIO()
+    agent, _ = build_agent(sast_findings=candidates, log_output=log_output)
 
-    # Capturar stderr donde el logger interno de run() escribe
-    captured = io.StringIO()
-    original_stderr = sys.stderr
-    sys.stderr = captured
-    try:
-        asyncio.run(
-            agent.run(repo="owner/repo", pr_number=1, dry_run=True)
-        )
-    finally:
-        sys.stderr = original_stderr
+    asyncio.run(
+        agent.run(repo="owner/repo", pr_number=1, dry_run=True)
+    )
 
-    captured.seek(0)
-    lines = [l for l in captured.read().splitlines() if l.strip()]
+    log_output.seek(0)
+    lines = [l for l in log_output.read().splitlines() if l.strip()]
     assert len(lines) > 0, "No se emitieron eventos de log"
 
     for line in lines:
