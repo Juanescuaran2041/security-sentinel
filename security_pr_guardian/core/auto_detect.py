@@ -325,3 +325,82 @@ class AutoDetector:
         Para npm y Cargo se deja en minúsculas sin más transformación.
         """
         return re.sub(r"[-_.]+", "-", name).lower()
+
+
+# ---------------------------------------------------------------------------
+# Funciones de conveniencia a nivel de módulo (usadas por la CLI)
+# ---------------------------------------------------------------------------
+
+
+def detect_frameworks(cwd: Path | str | None = None) -> list[str]:
+    """Detecta frameworks del proyecto escaneando manifiestos.
+
+    Parameters
+    ----------
+    cwd : Path | str | None
+        Directorio raíz del proyecto. Por defecto el directorio actual.
+
+    Returns
+    -------
+    list[str]
+        Nombres canónicos de frameworks detectados (ordenados).
+    """
+    return AutoDetector(cwd=cwd).detect().frameworks
+
+
+def detect_auth_libraries(cwd: Path | str | None = None) -> list[str]:
+    """Detecta librerías de autenticación/hashing del proyecto.
+
+    Parameters
+    ----------
+    cwd : Path | str | None
+        Directorio raíz del proyecto. Por defecto el directorio actual.
+
+    Returns
+    -------
+    list[str]
+        Nombres canónicos de librerías de auth detectadas (ordenados).
+    """
+    return AutoDetector(cwd=cwd).detect().auth_libraries
+
+
+def detect_min_severity(cwd: Path | str | None = None) -> str | None:
+    """Infiere la severidad mínima desde archivos de configuración de linters.
+
+    Parameters
+    ----------
+    cwd : Path | str | None
+        Directorio raíz del proyecto. Por defecto el directorio actual.
+
+    Returns
+    -------
+    str | None
+        Nivel de severidad inferido ('critical', 'high', 'medium', 'low')
+        o None si no se pudo inferir.
+    """
+    return AutoDetector(cwd=cwd).detect().min_severity
+
+
+def auto_detect_profile(cwd: Path | str | None = None) -> dict:
+    """Ejecuta la detección completa y retorna un dict con los valores pre-rellenados.
+
+    Combina detección de frameworks, librerías de auth y severidad mínima
+    en un único diccionario listo para ser usado como defaults del cuestionario.
+
+    Parameters
+    ----------
+    cwd : Path | str | None
+        Directorio raíz del proyecto. Por defecto el directorio actual.
+
+    Returns
+    -------
+    dict
+        Diccionario con claves 'frameworks', 'auth_libraries', 'min_severity'.
+        Los campos no detectados tienen valores vacíos o None.
+    """
+    result = AutoDetector(cwd=cwd).detect()
+    return {
+        "frameworks": result.frameworks,
+        "auth_libraries": result.auth_libraries,
+        "min_severity": result.min_severity,
+    }

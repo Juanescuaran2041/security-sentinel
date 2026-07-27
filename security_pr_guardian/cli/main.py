@@ -21,20 +21,26 @@ from pathlib import Path
 import boto3
 import click
 import httpx
+import yaml
 from rich.console import Console
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
 
 from security_pr_guardian import __version__
 from security_pr_guardian.core.models import (
+    AllowedPattern,
     AnalysisResult,
     AppConfig,
     ConfirmedFinding,
     Severity,
+    TeamProfile,
     SEVERITY_ORDER,
 )
 from security_pr_guardian.core.logger import StructuredLogger
+from security_pr_guardian.core.team_profile import TeamProfileLoader, PROFILE_FILENAME
+from security_pr_guardian.core.auto_detect import auto_detect_profile
 from security_pr_guardian.cli.output import (
     make_console,
     render_json_output,
@@ -186,12 +192,30 @@ def check(repo: str, pr: int, output_format: str, no_comment: bool) -> None:
 
 
 @cli.command()
-def init() -> None:
-    """Genera .env.example y valida las credenciales configuradas."""
+@click.option(
+    "--profile",
+    "with_profile",
+    is_flag=True,
+    default=False,
+    help="Iniciar cuestionario interactivo para generar .security-guardian.yml.",
+)
+@click.option(
+    "--auto-detect",
+    "auto_detect",
+    is_flag=True,
+    default=False,
+    help="Pre-rellenar el cuestionario detectando frameworks y librerías desde los manifiestos del proyecto.",
+)
+def init(with_profile: bool, auto_detect: bool) -> None:
+    """Genera .env.example, valida credenciales, y opcionalmente crea .security-guardian.yml."""
     console = _make_console()
     out_console = _make_stdout_console()
 
-    # Generar .env.example
+    if with_profile:
+        _run_profile_questionnaire(out_console, auto_detect=auto_detect)
+        return
+
+    # Comportamiento original: generar .env.example y validar credenciales
     env_example_content = _generate_env_example()
     env_path = Path(".env.example")
     env_path.write_text(env_example_content, encoding="utf-8")
@@ -199,9 +223,235 @@ def init() -> None:
         f"[green]✓[/green] Archivo [bold]{env_path}[/bold] generado correctamente."
     )
 
-    # Validar credenciales
     out_console.print("\n[bold]Validando credenciales del entorno...[/bold]\n")
     _validate_credentials(out_console)
+
+
+# ---------------------------------------------------------------------------
+# Cuestionario interactivo para .security-guardian.yml
+# ---------------------------------------------------------------------------
+
+_SEVERITY_CHOICES = ["critical", "high", "medium", "low", "info"]
+_DEFAULT_SEVERITY = "low"
+
+
+def _run_profile_questionnaire(console: Console, auto_detect: bool = False) -> None:
+    """Ejecuta el cuestionario interactivo para generar .security-guardian.yml.
+
+    Parameters
+    ----------
+    console : Console
+        Instancia de Rich Console para mostrar mensajes y prompts.
+    auto_detect : bool
+        Si True, pre-rellena los valores detectando manifiestos primero.
+    """
+    cwd = Path.cwd()
+    profile_path = cwd / PROFILE_FILENAME
+
+    # --- Paso 1: cargar defaults ---
+    # Prioridad: (a) archivo existente > (b) auto-detect > (c) valores vacíos
+    existing_profile: TeamProfile | None = None
+    if profile_path.exists():
+        loader = TeamProfileLoader(cwd=cwd)
+        existing_profile = loader.load()
+        console.print(
+            f"\n[bold yellow]Archivo existente encontrado:[/bold yellow] {PROFILE_FILENAME}"
+        )
+        console.print("[dim]Los valores actuales se usarán como valores por defecto.[/dim]\n")
+
+    # Defaults iniciales desde el perfil existente (si hay)
+    default_frameworks: list[str] = existing_profile.frameworks if existing_profile else []
+    default_auth_libs: list[str] = existing_profile.auth_libraries if existing_profile else []
+    default_allowed: list[AllowedPattern] = existing_profile.allowed_patterns if existing_profile else []
+    default_severity: str = existing_profile.min_severity.value if existing_profile else _DEFAULT_SEVERITY
+    default_exceptions: list[str] = existing_profile.custom_exceptions if existing_profile else []
+
+    # Auto-detect: sobreescribe defaults vacíos (si no había archivo)
+    if auto_detect:
+        try:
+            console.print("[bold cyan]🔍 Escaneando archivos del proyecto...[/bold cyan]\n")
+            detected = auto_detect_profile(cwd=cwd)
+            if not existing_profile:
+                # Solo usar auto-detect si no hay un archivo existente que domine
+                default_frameworks = detected.get("frameworks") or []
+                default_auth_libs = detected.get("auth_libraries") or []
+                detected_severity = detected.get("min_severity")
+                if detected_severity:
+                    default_severity = detected_severity
+            else:
+                # Con archivo existente: mostrar lo detectado como info adicional
+                detected_fw = detected.get("frameworks") or []
+                detected_auth = detected.get("auth_libraries") or []
+                if detected_fw:
+                    console.print(f"[dim]  Frameworks detectados: {', '.join(detected_fw)}[/dim]")
+                if detected_auth:
+                    console.print(f"[dim]  Auth libs detectadas: {', '.join(detected_auth)}[/dim]")
+                console.print()
+        except Exception:
+            console.print("[yellow]Advertencia: no se pudo ejecutar auto-detect. Continuando sin pre-rellenado.[/yellow]\n")
+
+    # --- Paso 2: cuestionario ---
+    console.print(Panel.fit(
+        "[bold]Configuración del Perfil de Equipo[/bold]\n"
+        "[dim]Responde las preguntas para personalizar el análisis de seguridad.[/dim]",
+        border_style="cyan",
+    ))
+    console.print()
+
+    # Frameworks
+    fw_default_str = ", ".join(default_frameworks) if default_frameworks else ""
+    fw_prompt = f"Frameworks y lenguajes principales (separados por coma)"
+    if fw_default_str:
+        fw_prompt += f" [[dim]{fw_default_str}[/dim]]"
+    fw_input = Prompt.ask(
+        fw_prompt,
+        default=fw_default_str,
+        console=console,
+    )
+    frameworks = [f.strip() for f in fw_input.split(",") if f.strip()]
+
+    # Auth libraries
+    auth_default_str = ", ".join(default_auth_libs) if default_auth_libs else ""
+    auth_prompt = "Librerías de autenticación/hashing (separadas por coma)"
+    if auth_default_str:
+        auth_prompt += f" [[dim]{auth_default_str}[/dim]]"
+    auth_input = Prompt.ask(
+        auth_prompt,
+        default=auth_default_str,
+        console=console,
+    )
+    auth_libraries = [a.strip() for a in auth_input.split(",") if a.strip()]
+
+    # Allowed patterns
+    allowed_patterns = list(default_allowed)  # copia
+    if allowed_patterns:
+        console.print(f"\n[dim]Patrones permitidos actuales:[/dim]")
+        for ap in allowed_patterns:
+            console.print(f"  [dim]• {ap.cwe_id}: {ap.razon}[/dim]")
+
+    console.print()
+    while True:
+        add_pattern = Confirm.ask(
+            "¿Añadir un patrón CWE permitido (uso legítimo de algo normalmente flagueado)?",
+            default=False,
+            console=console,
+        )
+        if not add_pattern:
+            break
+        cwe_id = Prompt.ask(
+            "  CWE ID (ej: CWE-327)",
+            console=console,
+        ).strip()
+        razon = Prompt.ask(
+            "  Razón del uso legítimo",
+            console=console,
+        ).strip()
+        if cwe_id and razon:
+            allowed_patterns.append(AllowedPattern(cwe_id=cwe_id, razon=razon))
+
+    # Min severity
+    console.print()
+    severity_choices_str = "/".join(_SEVERITY_CHOICES)
+    sev_input = Prompt.ask(
+        f"Severidad mínima a reportar ({severity_choices_str})",
+        default=default_severity,
+        console=console,
+    ).strip().lower()
+    if sev_input not in _SEVERITY_CHOICES:
+        console.print(f"[yellow]Valor desconocido '{sev_input}', usando '{_DEFAULT_SEVERITY}'.[/yellow]")
+        sev_input = _DEFAULT_SEVERITY
+
+    # Custom exceptions
+    console.print()
+    if default_exceptions:
+        console.print("[dim]Excepciones actuales:[/dim]")
+        for exc in default_exceptions:
+            console.print(f"  [dim]• {exc}[/dim]")
+
+    exc_default_str = "; ".join(default_exceptions) if default_exceptions else ""
+    exc_input = Prompt.ask(
+        "Excepciones o convenciones del equipo (separadas por punto y coma, o vacío)",
+        default=exc_default_str,
+        console=console,
+    )
+    custom_exceptions = [e.strip() for e in exc_input.split(";") if e.strip()]
+
+    # --- Paso 3: confirmación si el archivo ya existe ---
+    if profile_path.exists():
+        console.print()
+        overwrite = Confirm.ask(
+            f"[bold yellow]¿Sobrescribir {PROFILE_FILENAME}?[/bold yellow]",
+            default=False,
+            console=console,
+        )
+        if not overwrite:
+            console.print("[dim]Operación cancelada. El archivo no fue modificado.[/dim]")
+            return
+
+    # --- Paso 4: generar el YAML ---
+    profile_data = _build_profile_yaml_dict(
+        frameworks=frameworks,
+        auth_libraries=auth_libraries,
+        allowed_patterns=allowed_patterns,
+        min_severity=sev_input,
+        custom_exceptions=custom_exceptions,
+    )
+
+    try:
+        yaml_content = yaml.dump(
+            profile_data,
+            default_flow_style=False,
+            allow_unicode=True,
+            sort_keys=False,
+        )
+        profile_path.write_text(yaml_content, encoding="utf-8")
+        console.print(
+            f"\n[bold green]✓[/bold green] Perfil guardado en [bold]{profile_path}[/bold]"
+        )
+    except Exception as exc:
+        console.print(f"[bold red]Error al escribir {PROFILE_FILENAME}:[/bold red] {exc}")
+
+
+def _build_profile_yaml_dict(
+    frameworks: list[str],
+    auth_libraries: list[str],
+    allowed_patterns: list[AllowedPattern],
+    min_severity: str,
+    custom_exceptions: list[str],
+) -> dict:
+    """Construye el diccionario a serializar como YAML para .security-guardian.yml.
+
+    Parameters
+    ----------
+    frameworks : list[str]
+        Frameworks del proyecto.
+    auth_libraries : list[str]
+        Librerías de autenticación/hashing.
+    allowed_patterns : list[AllowedPattern]
+        Patrones CWE permitidos con justificación.
+    min_severity : str
+        Nivel de severidad mínimo.
+    custom_exceptions : list[str]
+        Excepciones o convenciones del equipo.
+
+    Returns
+    -------
+    dict
+        Diccionario con la estructura `team_profile: {...}`.
+    """
+    patterns_list = [
+        {"cwe_id": ap.cwe_id, "razon": ap.razon}
+        for ap in allowed_patterns
+    ]
+    return {
+        "team_profile": {
+            "frameworks": frameworks,
+            "auth_libraries": auth_libraries,
+            "allowed_patterns": patterns_list,
+            "min_severity": min_severity,
+            "custom_exceptions": custom_exceptions,
+        }
+    }
 
 
 # ---------------------------------------------------------------------------
