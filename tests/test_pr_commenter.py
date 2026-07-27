@@ -99,7 +99,6 @@ def adapter(mock_logger, analysis_result) -> GitHubPRCommenterAdapter:
     return GitHubPRCommenterAdapter(
         token="ghp_test_token",
         logger=mock_logger,
-        analysis_result=analysis_result,
         base_url="https://api.github.com",
     )
 
@@ -112,6 +111,7 @@ def adapter(mock_logger, analysis_result) -> GitHubPRCommenterAdapter:
 @pytest.mark.asyncio
 async def test_creates_new_comment_when_none_exists(
     adapter: GitHubPRCommenterAdapter,
+    analysis_result: AnalysisResult,
     httpx_mock: HTTPXMock,
 ):
     """
@@ -132,7 +132,7 @@ async def test_creates_new_comment_when_none_exists(
         json={"id": COMMENT_ID, "body": "<!-- security-pr-guardian --> new comment"},
     )
 
-    result = await adapter.post_or_update_comment(REPO, PR_NUMBER, findings=[])
+    result = await adapter.post_or_update_comment(REPO, PR_NUMBER, analysis_result)
 
     assert result == str(COMMENT_ID)
 
@@ -145,6 +145,7 @@ async def test_creates_new_comment_when_none_exists(
 @pytest.mark.asyncio
 async def test_updates_existing_comment_when_watermark_found(
     adapter: GitHubPRCommenterAdapter,
+    analysis_result: AnalysisResult,
     httpx_mock: HTTPXMock,
 ):
     """
@@ -165,7 +166,7 @@ async def test_updates_existing_comment_when_watermark_found(
         json={"id": COMMENT_ID, "body": "updated content"},
     )
 
-    result = await adapter.post_or_update_comment(REPO, PR_NUMBER, findings=[])
+    result = await adapter.post_or_update_comment(REPO, PR_NUMBER, analysis_result)
 
     assert result == str(COMMENT_ID)
 
@@ -178,6 +179,7 @@ async def test_updates_existing_comment_when_watermark_found(
 @pytest.mark.asyncio
 async def test_retries_on_5xx_error(
     adapter: GitHubPRCommenterAdapter,
+    analysis_result: AnalysisResult,
     httpx_mock: HTTPXMock,
 ):
     """
@@ -215,7 +217,7 @@ async def test_retries_on_5xx_error(
         "security_pr_guardian.adapters.github.pr_commenter.asyncio.sleep",
         new_callable=AsyncMock,
     ):
-        result = await adapter.post_or_update_comment(REPO, PR_NUMBER, findings=[])
+        result = await adapter.post_or_update_comment(REPO, PR_NUMBER, analysis_result)
 
     assert result == str(COMMENT_ID)
 
@@ -228,6 +230,7 @@ async def test_retries_on_5xx_error(
 @pytest.mark.asyncio
 async def test_emits_comment_publish_failed_after_exhausted_retries(
     adapter: GitHubPRCommenterAdapter,
+    analysis_result: AnalysisResult,
     mock_logger: MagicMock,
     httpx_mock: HTTPXMock,
 ):
@@ -258,7 +261,7 @@ async def test_emits_comment_publish_failed_after_exhausted_retries(
         new_callable=AsyncMock,
     ):
         with pytest.raises(RuntimeError):
-            await adapter.post_or_update_comment(REPO, PR_NUMBER, findings=[])
+            await adapter.post_or_update_comment(REPO, PR_NUMBER, analysis_result)
 
     calls = mock_logger.log.call_args_list
     assert any(

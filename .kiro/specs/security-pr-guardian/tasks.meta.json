@@ -384,6 +384,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775560201
+      },
+      {
+        "executionId": "9c4fa386-56b6-407c-9bc1-415415f5563f",
+        "chatSessionId": "sess_7018ed91-1b68-4212-9ae8-8659611cf235",
+        "timestamp": 1785188357206
+      },
+      {
+        "executionId": "9c4fa386-56b6-407c-9bc1-415415f5563f",
+        "chatSessionId": "sess_7018ed91-1b68-4212-9ae8-8659611cf235",
+        "timestamp": 1785189110906
       }
     ],
     "8.2 Escribir tests unitarios del `SecurityAgent`: análisis CVE omitido cuando no hay manifiestos en el diff, tope de 20 hallazgos respetado, `no_evaluado` propagado cuando el LLM falla, `disposition: \"descartado\"` aplicado a findings no explotables, dry-run omite la llamada a `PRCommentPort`": [
@@ -391,6 +401,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775560299
+      },
+      {
+        "executionId": "d4be093a-43b3-49ec-b63c-36535a89a8db",
+        "chatSessionId": "sess_9e227f0e-2d31-43a7-8150-6f045153f6e8",
+        "timestamp": 1785189158174
+      },
+      {
+        "executionId": "d4be093a-43b3-49ec-b63c-36535a89a8db",
+        "chatSessionId": "sess_9e227f0e-2d31-43a7-8150-6f045153f6e8",
+        "timestamp": 1785189216485
       }
     ],
     "8.3 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 1: Los hallazgos no explotables siempre se descartan** — `st.lists(st.builds(CandidateFinding, ...), min_size=0, max_size=30)` — verificar que todo finding con `es_explotable=False` tiene `disposition: \"descartado\"` y no aparece en `confirmed_findings`": [
@@ -398,6 +418,11 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775560397
+      },
+      {
+        "executionId": "941e3f16-ad50-42c1-be1d-3a17648b7e96",
+        "chatSessionId": "sess_cab3c6cb-de02-4fd8-91e6-a174025fb20e",
+        "timestamp": 1785189285033
       }
     ],
     "8.4 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 2: analysis_id es UUID v4 válido en todos los eventos de log** — `st.builds(AppConfig, ...)` + ejecución de análisis mockeada — verificar que cada evento de log contiene `analysis_id` con formato UUID v4": [
@@ -426,6 +451,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775560840
+      },
+      {
+        "executionId": "0f1c9b4e-31f2-4441-8a3e-d993d6f89538",
+        "chatSessionId": "sess_d6725823-6cf5-4d8b-ba55-dcaa27db0efe",
+        "timestamp": 1785173502495
+      },
+      {
+        "executionId": "0f1c9b4e-31f2-4441-8a3e-d993d6f89538",
+        "chatSessionId": "sess_d6725823-6cf5-4d8b-ba55-dcaa27db0efe",
+        "timestamp": 1785173553253
       }
     ],
     "9.2 Verificar que `duracion_ms` está presente si y solo si el evento representa una operación completada con inicio y fin medibles (ausente en eventos de solo-inicio)": [
@@ -433,6 +468,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775560941
+      },
+      {
+        "executionId": "0fc0745f-a6e6-460d-b3f2-b9a0bdb21497",
+        "chatSessionId": "sess_8dc1bfe9-6502-4153-b596-ebcc703e298a",
+        "timestamp": 1785173566382
+      },
+      {
+        "executionId": "0fc0745f-a6e6-460d-b3f2-b9a0bdb21497",
+        "chatSessionId": "sess_8dc1bfe9-6502-4153-b596-ebcc703e298a",
+        "timestamp": 1785173624741
       }
     ],
     "9.3 Escribir tests unitarios del logger: campos base requeridos en todo evento, `duracion_ms` presente solo cuando corresponde, evento `analysis_complete` con todos los conteos requeridos": [
@@ -440,6 +485,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775561040
+      },
+      {
+        "executionId": "59af63e0-7d97-4a18-b007-d6666a13c819",
+        "chatSessionId": "sess_7312d95d-fbd0-4e0e-9a2f-2e4fbf36c892",
+        "timestamp": 1785173635350
+      },
+      {
+        "executionId": "59af63e0-7d97-4a18-b007-d6666a13c819",
+        "chatSessionId": "sess_7312d95d-fbd0-4e0e-9a2f-2e4fbf36c892",
+        "timestamp": 1785173686975
       }
     ],
     "9.4 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 14: Los eventos de log siempre contienen los campos base requeridos** — `st.builds(LogEvent, ...)` con valores aleatorios — verificar que `timestamp`, `analysis_id`, `componente`, `evento` y `detalle` están siempre presentes": [
@@ -447,6 +502,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775561140
+      },
+      {
+        "executionId": "3743a99d-5825-4f85-86b4-0ebdbeeb1843",
+        "chatSessionId": "sess_0041ecba-3ac0-4b84-8fc0-7bcc92972ebb",
+        "timestamp": 1785173696180
+      },
+      {
+        "executionId": "3743a99d-5825-4f85-86b4-0ebdbeeb1843",
+        "chatSessionId": "sess_0041ecba-3ac0-4b84-8fc0-7bcc92972ebb",
+        "timestamp": 1785173766336
       }
     ],
     "10.1 Implementar `security_pr_guardian/cli/main.py` con `click` + `rich`: comando `security-guardian check --repo <owner/repo> --pr <number> [--output text|json] [--no-comment]` y comando `security-guardian init`": [
@@ -454,6 +519,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775561241
+      },
+      {
+        "executionId": "3553f33d-9189-42c9-ba91-e25d8a0f7cef",
+        "chatSessionId": "sess_33e2ca5c-86c4-4f84-a50a-d020241fab5b",
+        "timestamp": 1785173777559
+      },
+      {
+        "executionId": "3553f33d-9189-42c9-ba91-e25d8a0f7cef",
+        "chatSessionId": "sess_33e2ca5c-86c4-4f84-a50a-d020241fab5b",
+        "timestamp": 1785174661356
       }
     ],
     "10.2 Implementar la lógica de salida del CLI: salida con colores ANSI (verde en éxito, rojo/amarillo según severidad máxima), tabla de hallazgos con columnas `Severidad`, `Tipo`, `Archivo:Línea`, `CVE/CWE`, omisión de ANSI cuando `NO_COLOR` está presente o `TERM=dumb`": [
@@ -461,6 +536,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775561340
+      },
+      {
+        "executionId": "a98d8e50-3002-484a-b6a5-54898eecbe69",
+        "chatSessionId": "sess_94db161e-b33b-4fef-8b33-1bc52c3bb418",
+        "timestamp": 1785174679321
+      },
+      {
+        "executionId": "a98d8e50-3002-484a-b6a5-54898eecbe69",
+        "chatSessionId": "sess_94db161e-b33b-4fef-8b33-1bc52c3bb418",
+        "timestamp": 1785175285521
       }
     ],
     "10.3 Implementar el flag `--output json`: serialización completa de `AnalysisResult` a JSON en stdout sin salida ANSI": [
@@ -468,6 +553,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775561453
+      },
+      {
+        "executionId": "aac6114c-6ac5-44bd-90df-75dbbc347411",
+        "chatSessionId": "sess_c0ef2784-e4ac-4a58-b174-42182ea7d164",
+        "timestamp": 1785175300200
+      },
+      {
+        "executionId": "aac6114c-6ac5-44bd-90df-75dbbc347411",
+        "chatSessionId": "sess_c0ef2784-e4ac-4a58-b174-42182ea7d164",
+        "timestamp": 1785175763801
       }
     ],
     "10.4 Implementar el comando `security-guardian init`: generación de `.env.example` con todas las variables requeridas y sus descripciones, validación de credenciales del entorno con impresión del resultado por cada verificación": [
@@ -475,6 +570,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775561573
+      },
+      {
+        "executionId": "4f39b112-5f22-4ca0-a18c-fce4a866402f",
+        "chatSessionId": "sess_ba0e7339-31f1-42d6-9d8a-9f4b65ae67b4",
+        "timestamp": 1785175778416
+      },
+      {
+        "executionId": "4f39b112-5f22-4ca0-a18c-fce4a866402f",
+        "chatSessionId": "sess_ba0e7339-31f1-42d6-9d8a-9f4b65ae67b4",
+        "timestamp": 1785176332005
       }
     ],
     "10.5 Implementar la validación de configuración al arranque: mensaje estructurado en stderr con nombre exacto de la variable ausente, código de salida 2 antes de iniciar ninguna llamada a la API": [
@@ -482,6 +587,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775561685
+      },
+      {
+        "executionId": "ec162a20-4a1c-4fe3-993f-a49749d6e259",
+        "chatSessionId": "sess_f47f9120-3044-4132-a14b-327c5f8e72cd",
+        "timestamp": 1785176346288
+      },
+      {
+        "executionId": "ec162a20-4a1c-4fe3-993f-a49749d6e259",
+        "chatSessionId": "sess_f47f9120-3044-4132-a14b-327c5f8e72cd",
+        "timestamp": 1785176706154
       }
     ],
     "10.6 Escribir tests unitarios del CLI: código de salida 0 sin hallazgos explotables, código 1 con al menos un hallazgo explotable, código 2 en argumentos inválidos, código 2 en variable obligatoria ausente, `--output json` produce JSON parseable, `--no-comment` omite `PRCommentPort`, ANSI omitido con `NO_COLOR`": [
@@ -489,6 +604,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775561773
+      },
+      {
+        "executionId": "130d98af-7194-489e-91a7-a890b8d6b70c",
+        "chatSessionId": "sess_5ad33c33-2b00-479d-9c55-e1a64878960e",
+        "timestamp": 1785176719247
+      },
+      {
+        "executionId": "130d98af-7194-489e-91a7-a890b8d6b70c",
+        "chatSessionId": "sess_5ad33c33-2b00-479d-9c55-e1a64878960e",
+        "timestamp": 1785177035129
       }
     ],
     "10.7 Escribir test de propiedad (Hypothesis, `@settings(max_examples=100)`) — **Property 15: La salida JSON del CLI siempre es JSON parseable válido** — `st.builds(AnalysisResult, ...)` renderizado por el formateador CLI — verificar que los bytes en stdout se deserializan a JSON válido con las claves `analysis_id`, `confirmed_count`, `discarded_count`, `confirmed_findings` y `diff_truncated`": [
@@ -496,6 +621,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775561883
+      },
+      {
+        "executionId": "527b8d92-ef03-4cda-9b77-5f533a59cefc",
+        "chatSessionId": "sess_30f9cfe1-ce04-4036-9dc9-790e729be83e",
+        "timestamp": 1785177048482
+      },
+      {
+        "executionId": "527b8d92-ef03-4cda-9b77-5f533a59cefc",
+        "chatSessionId": "sess_30f9cfe1-ce04-4036-9dc9-790e729be83e",
+        "timestamp": 1785177217157
       }
     ],
     "11.1 Escribir test de integración — happy path completo: diff con inyección SQL + una dependencia vulnerable → finding confirmado en comentario del PR (todos los servicios externos mockeados con `pytest-httpx` y `moto`)": [
@@ -503,6 +638,21 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775561985
+      },
+      {
+        "executionId": "738e0e32-0ded-4e33-af9f-335b8cced537",
+        "chatSessionId": "sess_f61e7a8b-73b6-4821-a169-64d9deb22b6e",
+        "timestamp": 1785177228266
+      },
+      {
+        "executionId": "df639432-35fb-4204-a251-5152bdac4b3c",
+        "chatSessionId": "sess_27dfcd14-a109-4661-97d0-dcaf21cad3a4",
+        "timestamp": 1785185247743
+      },
+      {
+        "executionId": "df639432-35fb-4204-a251-5152bdac4b3c",
+        "chatSessionId": "sess_27dfcd14-a109-4661-97d0-dcaf21cad3a4",
+        "timestamp": 1785185723615
       }
     ],
     "11.2 Escribir test de integración — análisis CVE omitido cuando no hay manifiestos de dependencias en el diff": [
@@ -510,6 +660,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775562099
+      },
+      {
+        "executionId": "b1a02d78-2617-42f3-901f-8598fca29a15",
+        "chatSessionId": "sess_a6868319-cda7-4c70-b4c5-a01237aa1cea",
+        "timestamp": 1785186235161
+      },
+      {
+        "executionId": "b1a02d78-2617-42f3-901f-8598fca29a15",
+        "chatSessionId": "sess_a6868319-cda7-4c70-b4c5-a01237aa1cea",
+        "timestamp": 1785186366174
       }
     ],
     "11.3 Escribir test de integración — throttling de Bedrock: tras 3 reintentos, finding marcado `no_evaluado` con advertencia visible en comentario": [
@@ -517,6 +677,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775562207
+      },
+      {
+        "executionId": "93bdbd60-67ec-4bd3-90e8-fe536e260d55",
+        "chatSessionId": "sess_b93873de-dc5a-497b-a314-68e058b20e93",
+        "timestamp": 1785186613856
+      },
+      {
+        "executionId": "93bdbd60-67ec-4bd3-90e8-fe536e260d55",
+        "chatSessionId": "sess_b93873de-dc5a-497b-a314-68e058b20e93",
+        "timestamp": 1785186782117
       }
     ],
     "11.4 Escribir test de integración — truncación de diff: diff con más de 10 000 líneas → `diff_truncated=True`, advertencia en comentario, sin finding más allá de la línea 10 000": [
@@ -524,6 +694,16 @@
         "executionId": "b8f43cb1-a3b5-4119-8a6a-a94f44212cfb",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784775562307
+      },
+      {
+        "executionId": "3ea1a28b-03d0-42d8-8bad-4a21c3b5658b",
+        "chatSessionId": "sess_3ebe3738-9e5b-4e03-adab-c0e1bc990e51",
+        "timestamp": 1785186966076
+      },
+      {
+        "executionId": "3ea1a28b-03d0-42d8-8bad-4a21c3b5658b",
+        "chatSessionId": "sess_3ebe3738-9e5b-4e03-adab-c0e1bc990e51",
+        "timestamp": 1785187919332
       }
     ],
     "11.5 Escribir test de integración — comentario PR existente: mock de GitHub retorna comentario con marca de agua → adaptador usa PATCH en lugar de POST": [
@@ -601,6 +781,20 @@
         "executionId": "e2eb3463-f6ac-4e1a-a449-cb37d6fec73a",
         "chatSessionId": "sess_2890f236-f944-49f4-9558-3d21bb5d5058",
         "timestamp": 1784776906178
+      }
+    ],
+    "9. Observabilidad — StructuredLogger y eventos de ciclo de vida": [
+      {
+        "executionId": "3743a99d-5825-4f85-86b4-0ebdbeeb1843",
+        "chatSessionId": "sess_0041ecba-3ac0-4b84-8fc0-7bcc92972ebb",
+        "timestamp": 1785173766486
+      }
+    ],
+    "10. CLI — comandos `check` e `init`": [
+      {
+        "executionId": "527b8d92-ef03-4cda-9b77-5f533a59cefc",
+        "chatSessionId": "sess_30f9cfe1-ce04-4036-9dc9-790e729be83e",
+        "timestamp": 1785177217327
       }
     ]
   }
