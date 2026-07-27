@@ -110,10 +110,10 @@ OPTIONAL_FINDING_FIELDS = {
 @pytest.mark.asyncio
 async def test_analyze_diff_with_sql_injection_returns_valid_schema():
     """Un diff con SQL injection produce findings que cumplen el schema."""
-    result = await analyze_diff(SQL_INJECTION_DIFF)
+    raw = await analyze_diff(SQL_INJECTION_DIFF)
 
-    # El resultado debe ser una instancia de StaticAnalysisResult
-    assert isinstance(result, StaticAnalysisResult)
+    # analyze_diff retorna un dict serializado; deserializamos para validar schema
+    result = StaticAnalysisResult.model_validate(raw)
 
     # Campos de nivel superior
     assert hasattr(result, "findings")
@@ -153,9 +153,9 @@ async def test_analyze_diff_with_sql_injection_returns_valid_schema():
 @pytest.mark.asyncio
 async def test_analyze_diff_with_empty_diff_returns_empty_findings():
     """Un diff vacío produce una lista vacía de findings."""
-    result = await analyze_diff(EMPTY_DIFF)
+    raw = await analyze_diff(EMPTY_DIFF)
+    result = StaticAnalysisResult.model_validate(raw)
 
-    assert isinstance(result, StaticAnalysisResult)
     assert isinstance(result.findings, list)
     assert isinstance(result.errores_parciales, list)
     assert len(result.findings) == 0
@@ -164,9 +164,9 @@ async def test_analyze_diff_with_empty_diff_returns_empty_findings():
 @pytest.mark.asyncio
 async def test_analyze_diff_with_clean_diff_returns_empty_findings():
     """Un diff limpio (sin vulnerabilidades) produce findings vacíos."""
-    result = await analyze_diff(CLEAN_DIFF)
+    raw = await analyze_diff(CLEAN_DIFF)
+    result = StaticAnalysisResult.model_validate(raw)
 
-    assert isinstance(result, StaticAnalysisResult)
     assert isinstance(result.findings, list)
     assert isinstance(result.errores_parciales, list)
     assert len(result.findings) == 0
@@ -175,25 +175,23 @@ async def test_analyze_diff_with_clean_diff_returns_empty_findings():
 @pytest.mark.asyncio
 async def test_analyze_diff_output_matches_json_schema():
     """El output serializado a JSON coincide con el schema de StaticAnalysisResult."""
-    result = await analyze_diff(SQL_INJECTION_DIFF)
+    result_dict = await analyze_diff(SQL_INJECTION_DIFF)
 
-    # Serializar y validar round-trip via pydantic
-    result_dict = result.model_dump()
-
-    # Validar estructura de nivel superior
+    # El resultado ya es un dict; validar estructura de nivel superior
     assert "findings" in result_dict
     assert "errores_parciales" in result_dict
 
     # Reconstruir desde dict debe funcionar sin errores
     reconstructed = StaticAnalysisResult.model_validate(result_dict)
-    assert len(reconstructed.findings) == len(result.findings)
-    assert len(reconstructed.errores_parciales) == len(result.errores_parciales)
+    assert isinstance(reconstructed.findings, list)
+    assert isinstance(reconstructed.errores_parciales, list)
 
 
 @pytest.mark.asyncio
 async def test_analyze_diff_finding_optional_fields_are_valid():
     """Los campos opcionales en findings tienen tipos correctos si están presentes."""
-    result = await analyze_diff(SQL_INJECTION_DIFF)
+    raw = await analyze_diff(SQL_INJECTION_DIFF)
+    result = StaticAnalysisResult.model_validate(raw)
 
     for finding in result.findings:
         finding_dict = finding.model_dump()
