@@ -1,0 +1,62 @@
+name: Security PR Guardian
+description: Analyzes Pull Requests combining SAST, CVE scanning, and LLM reasoning via Amazon Bedrock to filter false positives and report real security risks.
+author: Security PR Guardian Team
+
+branding:
+  icon: shield
+  color: red
+
+inputs:
+  repo:
+    description: Repository in owner/repo format (e.g. octocat/hello-world)
+    required: true
+  pr-number:
+    description: Pull Request number to analyze
+    required: true
+  github-token:
+    description: GitHub token with repo read and PR write permissions
+    required: true
+  bedrock-region:
+    description: AWS region where Bedrock is available (e.g. us-east-1)
+    required: true
+  bedrock-model-id:
+    description: Bedrock model ID (e.g. anthropic.claude-3-5-haiku-20241022-v1:0)
+    required: true
+  no-comment:
+    description: If 'true', run analysis but skip posting the PR comment (dry-run)
+    required: false
+    default: 'false'
+  output:
+    description: Output format — 'text' (default) or 'json'
+    required: false
+    default: text
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Security PR Guardian
+      shell: bash
+      run: pip install security-pr-guardian
+
+    - name: Run analysis
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        BEDROCK_REGION: ${{ inputs.bedrock-region }}
+        BEDROCK_MODEL_ID: ${{ inputs.bedrock-model-id }}
+        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        AWS_SESSION_TOKEN: ${{ env.AWS_SESSION_TOKEN }}
+      run: |
+        FLAGS=""
+        if [ "${{ inputs.no-comment }}" = "true" ]; then FLAGS="$FLAGS --no-comment"; fi
+        if [ "${{ inputs.output }}" = "json" ]; then FLAGS="$FLAGS --output json"; fi
+        security-guardian check \
+          --repo "${{ inputs.repo }}" \
+          --pr "${{ inputs.pr-number }}" \
+          $FLAGS
