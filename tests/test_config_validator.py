@@ -59,15 +59,6 @@ class TestValidateConfigAtStartup:
         missing = validate_config_at_startup()
         assert "BEDROCK_MODEL_ID" in missing
 
-    def test_missing_anthropic_api_key(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """ANTHROPIC_API_KEY ausente cuando backend=anthropic."""
-        monkeypatch.setenv("GITHUB_TOKEN", "ghp_test123")
-        monkeypatch.setenv("LLM_BACKEND", "anthropic")
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-
-        missing = validate_config_at_startup()
-        assert "ANTHROPIC_API_KEY" in missing
-
     def test_multiple_missing_bedrock(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Múltiples variables ausentes se reportan todas."""
         monkeypatch.delenv("GITHUB_TOKEN", raising=False)
@@ -90,15 +81,6 @@ class TestValidateConfigAtStartup:
         missing = validate_config_at_startup()
         assert missing == []
 
-    def test_all_present_anthropic(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Sin errores cuando todas las variables de anthropic están presentes."""
-        monkeypatch.setenv("GITHUB_TOKEN", "ghp_test123")
-        monkeypatch.setenv("LLM_BACKEND", "anthropic")
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test123")
-
-        missing = validate_config_at_startup()
-        assert missing == []
-
     def test_default_backend_is_bedrock(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Si LLM_BACKEND no está definido, se asume bedrock."""
         monkeypatch.setenv("GITHUB_TOKEN", "ghp_test123")
@@ -110,18 +92,6 @@ class TestValidateConfigAtStartup:
         assert "BEDROCK_REGION" in missing
         assert "BEDROCK_MODEL_ID" in missing
 
-    def test_anthropic_does_not_require_bedrock_vars(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Backend anthropic no requiere BEDROCK_REGION ni BEDROCK_MODEL_ID."""
-        monkeypatch.setenv("GITHUB_TOKEN", "ghp_test123")
-        monkeypatch.setenv("LLM_BACKEND", "anthropic")
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test123")
-        monkeypatch.delenv("BEDROCK_REGION", raising=False)
-        monkeypatch.delenv("BEDROCK_MODEL_ID", raising=False)
-
-        missing = validate_config_at_startup()
-        assert missing == []
 
 
 # ---------------------------------------------------------------------------
@@ -218,20 +188,6 @@ class TestCheckCommandConfigValidation:
 
         assert result.exit_code == 2
         assert "BEDROCK_MODEL_ID" in result.output
-
-    def test_missing_anthropic_key_exit_code_2(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Req 8.2: ANTHROPIC_API_KEY ausente → exit code 2 con nombre exacto."""
-        monkeypatch.setenv("GITHUB_TOKEN", "ghp_test123")
-        monkeypatch.setenv("LLM_BACKEND", "anthropic")
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-
-        runner = CliRunner()
-        result = runner.invoke(cli, ["check", "--repo", "owner/repo", "--pr", "1"])
-
-        assert result.exit_code == 2
-        assert "ANTHROPIC_API_KEY" in result.output
 
     def test_multiple_missing_lists_all_in_stderr(
         self, monkeypatch: pytest.MonkeyPatch

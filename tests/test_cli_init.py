@@ -3,12 +3,10 @@
 Cubre:
 - Generación de `.env.example` con todas las variables requeridas y descripciones
 - Validación de credenciales: ✓ para configuradas, ✗ para ausentes
-- Comportamiento con LLM_BACKEND=anthropic (ANTHROPIC_API_KEY aparece)
 - Todas las variables ausentes → todas muestran ✗
 - Todas las variables configuradas → todas muestran ✓
 - Verificación real de GitHub token (mockeada)
 - Verificación real de AWS credentials (mockeada)
-- Verificación de formato de ANTHROPIC_API_KEY
 """
 
 from __future__ import annotations
@@ -42,7 +40,6 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "BEDROCK_REGION",
         "BEDROCK_MODEL_ID",
         "LLM_BACKEND",
-        "ANTHROPIC_API_KEY",
         "OSV_TIMEOUT_SECONDS",
         "MAX_DIFF_LINES",
         "MAX_DEPENDENCIES",
@@ -117,32 +114,6 @@ class TestEnvExampleGeneration:
             content = Path(".env.example").read_text(encoding="utf-8")
             assert "BEDROCK_MODEL_ID" in content
 
-    def test_env_example_contains_llm_backend(self, runner: CliRunner, clean_env: None) -> None:
-        """El .env.example contiene LLM_BACKEND."""
-        with runner.isolated_filesystem():
-            with patch(
-                "security_pr_guardian.cli.main._verify_github_token", return_value=False
-            ), patch(
-                "security_pr_guardian.cli.main._verify_aws_credentials", return_value=False
-            ):
-                runner.invoke(cli, ["init"])
-
-            content = Path(".env.example").read_text(encoding="utf-8")
-            assert "LLM_BACKEND" in content
-
-    def test_env_example_contains_anthropic_api_key(self, runner: CliRunner, clean_env: None) -> None:
-        """El .env.example contiene ANTHROPIC_API_KEY."""
-        with runner.isolated_filesystem():
-            with patch(
-                "security_pr_guardian.cli.main._verify_github_token", return_value=False
-            ), patch(
-                "security_pr_guardian.cli.main._verify_aws_credentials", return_value=False
-            ):
-                runner.invoke(cli, ["init"])
-
-            content = Path(".env.example").read_text(encoding="utf-8")
-            assert "ANTHROPIC_API_KEY" in content
-
     def test_env_example_contains_osv_timeout(self, runner: CliRunner, clean_env: None) -> None:
         """El .env.example contiene OSV_TIMEOUT_SECONDS."""
         with runner.isolated_filesystem():
@@ -197,8 +168,6 @@ class TestEnvExampleGeneration:
                 "GITHUB_TOKEN",
                 "BEDROCK_REGION",
                 "BEDROCK_MODEL_ID",
-                "LLM_BACKEND",
-                "ANTHROPIC_API_KEY",
                 "OSV_TIMEOUT_SECONDS",
                 "MAX_DIFF_LINES",
                 "MAX_DEPENDENCIES",
@@ -322,117 +291,6 @@ class TestCredentialValidationAllSet:
                 result = runner.invoke(cli, ["init"])
 
             assert "válido" in result.output
-
-
-# ---------------------------------------------------------------------------
-# Tests: Validación con LLM_BACKEND=anthropic
-# ---------------------------------------------------------------------------
-
-
-class TestCredentialValidationAnthropicBackend:
-    def test_anthropic_key_check_appears(
-        self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Con LLM_BACKEND=anthropic, ANTHROPIC_API_KEY se valida."""
-        monkeypatch.setenv("LLM_BACKEND", "anthropic")
-        monkeypatch.setenv("GITHUB_TOKEN", "ghp_test123")
-        monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
-        monkeypatch.setenv("BEDROCK_MODEL_ID", "anthropic.claude-3-sonnet")
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-api123key456")
-
-        with runner.isolated_filesystem():
-            with patch(
-                "security_pr_guardian.cli.main._verify_github_token", return_value=True
-            ), patch(
-                "security_pr_guardian.cli.main._verify_aws_credentials", return_value=True
-            ):
-                result = runner.invoke(cli, ["init"])
-
-            assert "ANTHROPIC_API_KEY" in result.output
-
-    def test_anthropic_key_missing_shows_x(
-        self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Con LLM_BACKEND=anthropic y ANTHROPIC_API_KEY ausente, se muestra ✗."""
-        monkeypatch.setenv("LLM_BACKEND", "anthropic")
-        monkeypatch.setenv("GITHUB_TOKEN", "ghp_test123")
-        monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
-        monkeypatch.setenv("BEDROCK_MODEL_ID", "anthropic.claude-3-sonnet")
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-
-        with runner.isolated_filesystem():
-            with patch(
-                "security_pr_guardian.cli.main._verify_github_token", return_value=True
-            ), patch(
-                "security_pr_guardian.cli.main._verify_aws_credentials", return_value=True
-            ):
-                result = runner.invoke(cli, ["init"])
-
-            assert "ANTHROPIC_API_KEY" in result.output
-            assert "no configurado" in result.output
-
-    def test_anthropic_key_valid_format(
-        self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Con ANTHROPIC_API_KEY con prefijo sk-ant-, se muestra formato válido."""
-        monkeypatch.setenv("LLM_BACKEND", "anthropic")
-        monkeypatch.setenv("GITHUB_TOKEN", "ghp_test123")
-        monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
-        monkeypatch.setenv("BEDROCK_MODEL_ID", "anthropic.claude-3-sonnet")
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-validkey123456789")
-
-        with runner.isolated_filesystem():
-            with patch(
-                "security_pr_guardian.cli.main._verify_github_token", return_value=True
-            ), patch(
-                "security_pr_guardian.cli.main._verify_aws_credentials", return_value=True
-            ):
-                result = runner.invoke(cli, ["init"])
-
-            assert "formato válido" in result.output
-
-    def test_anthropic_key_invalid_format(
-        self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Con ANTHROPIC_API_KEY sin prefijo sk-ant-, se muestra formato inesperado."""
-        monkeypatch.setenv("LLM_BACKEND", "anthropic")
-        monkeypatch.setenv("GITHUB_TOKEN", "ghp_test123")
-        monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
-        monkeypatch.setenv("BEDROCK_MODEL_ID", "anthropic.claude-3-sonnet")
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "invalid-key-format")
-
-        with runner.isolated_filesystem():
-            with patch(
-                "security_pr_guardian.cli.main._verify_github_token", return_value=True
-            ), patch(
-                "security_pr_guardian.cli.main._verify_aws_credentials", return_value=True
-            ):
-                result = runner.invoke(cli, ["init"])
-
-            assert "formato inesperado" in result.output
-
-    def test_anthropic_check_not_shown_for_bedrock_backend(
-        self, runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Con LLM_BACKEND=bedrock (default), ANTHROPIC_API_KEY no se valida."""
-        monkeypatch.setenv("LLM_BACKEND", "bedrock")
-        monkeypatch.setenv("GITHUB_TOKEN", "ghp_test123")
-        monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
-        monkeypatch.setenv("BEDROCK_MODEL_ID", "anthropic.claude-3-sonnet")
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-
-        with runner.isolated_filesystem():
-            with patch(
-                "security_pr_guardian.cli.main._verify_github_token", return_value=True
-            ), patch(
-                "security_pr_guardian.cli.main._verify_aws_credentials", return_value=True
-            ):
-                result = runner.invoke(cli, ["init"])
-
-            # ANTHROPIC_API_KEY should not appear as a validation check
-            # (it's still in .env.example as a comment, but not in credential validation output)
-            # The validation output should not mention it's "no configurado"
-            assert "no configurado" not in result.output
 
 
 # ---------------------------------------------------------------------------

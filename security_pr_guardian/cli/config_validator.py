@@ -24,7 +24,6 @@ def validate_config_at_startup() -> list[str]:
 
     Variables condicionales según LLM_BACKEND:
       - bedrock (default): BEDROCK_REGION, BEDROCK_MODEL_ID
-      - anthropic: ANTHROPIC_API_KEY
     """
     missing: list[str] = []
 
@@ -32,17 +31,11 @@ def validate_config_at_startup() -> list[str]:
     if not os.environ.get("GITHUB_TOKEN"):
         missing.append("GITHUB_TOKEN")
 
-    # Determinar backend LLM
-    llm_backend = os.environ.get("LLM_BACKEND", "bedrock").lower()
-
-    if llm_backend == "bedrock":
-        if not os.environ.get("BEDROCK_REGION"):
-            missing.append("BEDROCK_REGION")
-        if not os.environ.get("BEDROCK_MODEL_ID"):
-            missing.append("BEDROCK_MODEL_ID")
-    elif llm_backend == "anthropic":
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            missing.append("ANTHROPIC_API_KEY")
+    # Bedrock es el único backend LLM
+    if not os.environ.get("BEDROCK_REGION"):
+        missing.append("BEDROCK_REGION")
+    if not os.environ.get("BEDROCK_MODEL_ID"):
+        missing.append("BEDROCK_MODEL_ID")
 
     return missing
 

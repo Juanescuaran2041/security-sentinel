@@ -355,7 +355,6 @@ class TestAppConfig:
             "LLM_BACKEND",
             "BEDROCK_REGION",
             "BEDROCK_MODEL_ID",
-            "ANTHROPIC_API_KEY",
             "OSV_TIMEOUT_SECONDS",
             "MAX_DIFF_LINES",
             "MAX_DEPENDENCIES",
@@ -374,16 +373,6 @@ class TestAppConfig:
             "llm_backend": "bedrock",
             "bedrock_region": "us-east-1",
             "bedrock_model_id": "anthropic.claude-3-sonnet-20240229-v1:0",
-        }
-        defaults.update(overrides)
-        return defaults
-
-    def _make_anthropic_config(self, **overrides):
-        """Create a valid anthropic AppConfig kwargs dict."""
-        defaults = {
-            "github_token": "ghp_test_token_123",
-            "llm_backend": "anthropic",
-            "anthropic_api_key": "sk-ant-test-key",
         }
         defaults.update(overrides)
         return defaults
@@ -413,14 +402,6 @@ class TestAppConfig:
                 github_token="ghp_token",
                 llm_backend="bedrock",
                 bedrock_region="us-east-1",
-            )
-
-    def test_anthropic_missing_api_key_raises(self, monkeypatch):
-        self._clean_env(monkeypatch)
-        with pytest.raises(ValueError, match="anthropic_api_key"):
-            AppConfig(
-                github_token="ghp_token",
-                llm_backend="anthropic",
             )
 
     def test_osv_timeout_zero_raises(self, monkeypatch):
@@ -458,12 +439,6 @@ class TestAppConfig:
         cfg = AppConfig(**self._make_bedrock_config())
         assert cfg.llm_backend == "bedrock"
         assert cfg.bedrock_region == "us-east-1"
-
-    def test_valid_anthropic_config_succeeds(self, monkeypatch):
-        self._clean_env(monkeypatch)
-        cfg = AppConfig(**self._make_anthropic_config())
-        assert cfg.llm_backend == "anthropic"
-        assert cfg.anthropic_api_key == "sk-ant-test-key"
 
     def test_default_values_applied(self, monkeypatch):
         self._clean_env(monkeypatch)

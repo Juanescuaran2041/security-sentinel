@@ -280,17 +280,11 @@ def _generate_env_example() -> str:
 # [REQUERIDO] Token de GitHub con permisos de lectura de PRs y escritura de comentarios
 GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-# [REQUERIDO para llm_backend=bedrock] Región AWS donde está disponible el modelo
+# [REQUERIDO] Región AWS donde está disponible el modelo
 BEDROCK_REGION=us-east-1
 
-# [REQUERIDO para llm_backend=bedrock] ID del modelo en Amazon Bedrock
+# [REQUERIDO] ID del modelo en Amazon Bedrock
 BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
-
-# [OPCIONAL] Backend LLM: "bedrock" (default) o "anthropic" (fallback para demos)
-LLM_BACKEND=bedrock
-
-# [OPCIONAL — solo si llm_backend=anthropic] API key de Anthropic
-# ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # [OPCIONAL] Timeout para consultas a OSV.dev (segundos, default: 10)
 # OSV_TIMEOUT_SECONDS=10
@@ -311,9 +305,7 @@ def _validate_credentials(console: Console) -> None:
     2. Si está presente, intenta verificar que funcione realmente:
        - GITHUB_TOKEN: GET /rate_limit para confirmar autenticación.
        - BEDROCK_REGION + BEDROCK_MODEL_ID: STS GetCallerIdentity.
-       - ANTHROPIC_API_KEY: verificación de formato (sk-ant-).
     """
-    llm_backend = os.environ.get("LLM_BACKEND", "bedrock")
     all_ok = True
 
     # --- GITHUB_TOKEN ---
@@ -371,28 +363,6 @@ def _validate_credentials(console: Console) -> None:
             console.print(
                 "  [yellow]~[/yellow] Credenciales AWS (STS): no se pudieron verificar"
             )
-
-    # --- ANTHROPIC_API_KEY (solo si llm_backend=anthropic) ---
-    if llm_backend == "anthropic":
-        anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
-        if not anthropic_key:
-            console.print(
-                "  [red]✗[/red] API Key de Anthropic (ANTHROPIC_API_KEY): "
-                "[bold red]no configurado[/bold red]"
-            )
-            all_ok = False
-        else:
-            # Verificar formato (sk-ant-)
-            if anthropic_key.startswith("sk-ant-"):
-                console.print(
-                    "  [green]✓[/green] API Key de Anthropic (ANTHROPIC_API_KEY): "
-                    "configurado, formato válido"
-                )
-            else:
-                console.print(
-                    "  [yellow]~[/yellow] API Key de Anthropic (ANTHROPIC_API_KEY): "
-                    "configurado, formato inesperado (se espera prefijo sk-ant-)"
-                )
 
     console.print()
     if all_ok:

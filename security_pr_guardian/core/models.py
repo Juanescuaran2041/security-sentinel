@@ -119,10 +119,9 @@ class AppConfig(BaseSettings):
     """Configuracion de la aplicacion con validacion de credenciales."""
 
     github_token: str
-    llm_backend: Literal["bedrock", "anthropic"] = "bedrock"
+    llm_backend: Literal["bedrock"] = "bedrock"
     bedrock_region: str | None = None
     bedrock_model_id: str | None = None
-    anthropic_api_key: str | None = None
     osv_timeout_seconds: int = Field(default=10, ge=1, le=300)
     max_diff_lines: int = Field(default=10000, ge=1, le=10000)
     max_dependencies: int = Field(default=50, ge=1, le=1000)
@@ -142,12 +141,6 @@ class AppConfig(BaseSettings):
                 raise ValueError(
                     "Error: se requieren bedrock_region y bedrock_model_id "
                     'cuando llm_backend = "bedrock"'
-                )
-        elif self.llm_backend == "anthropic":
-            if not self.anthropic_api_key:
-                raise ValueError(
-                    "Error: se requiere anthropic_api_key "
-                    'cuando llm_backend = "anthropic"'
                 )
         return self
 
