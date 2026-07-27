@@ -345,7 +345,11 @@ class TestAppConfig:
     """Tests for AppConfig validation logic."""
 
     def _clean_env(self, monkeypatch):
-        """Remove env vars that could interfere with AppConfig."""
+        """Remove env vars that could interfere with AppConfig.
+
+        Also disables .env file loading so real credentials in the project's
+        .env don't satisfy validation requirements during tests.
+        """
         env_vars = [
             "GITHUB_TOKEN",
             "LLM_BACKEND",
@@ -358,6 +362,10 @@ class TestAppConfig:
         ]
         for var in env_vars:
             monkeypatch.delenv(var, raising=False)
+
+        # Prevent pydantic-settings from reading the real .env file.
+        # model_config is a plain dict on the class, so we can patch it directly.
+        monkeypatch.setitem(AppConfig.model_config, "env_file", None)
 
     def _make_bedrock_config(self, **overrides):
         """Create a valid bedrock AppConfig kwargs dict."""

@@ -19,6 +19,7 @@ from security_pr_guardian.core.models import (
     LLMVerdict,
     Recommendation,
     Severity,
+    TeamProfile
 )
 from security_pr_guardian.ports.llm_reasoning import LLMReasoningPort
 
@@ -62,10 +63,65 @@ no criptografico, ORM con queries parametrizadas), marca es_explotable=false.
 """
 
 
-def _build_user_prompt(finding: CandidateFinding, kb_context: list[KBFragment]) -> str:
-    """Construye el prompt USER con el finding y contexto KB."""
+def _build_team_profile_section(team_profile: TeamProfile) -> str:
+    """Genera la sección ## Perfil del Equipo para el prompt USER.
+
+    Retorna cadena vacía si el perfil no tiene contenido relevante,
+    de forma que el prompt quede idéntico al comportamiento anterior
+    cuando no hay perfil configurado.
+    """
+    has_content = (
+        team_profile.frameworks
+        or team_profile.auth_libraries
+        or team_profile.allowed_patterns
+        or team_profile.custom_exceptions
+    )
+    if not has_content:
+        return ""
+
+    lines: list[str] = ["## Perfil del Equipo"]
+
+    if team_profile.frameworks:
+        lines.append(f"Frameworks: {', '.join(team_profile.frameworks)}")
+
+    if team_profile.auth_libraries:
+        lines.append(f"Librerías de autenticación: {', '.join(team_profile.auth_libraries)}")
+
+    if team_profile.allowed_patterns:
+        lines.append("Patrones permitidos por convención del equipo:")
+        for pattern in team_profile.allowed_patterns:
+            lines.append(f"- {pattern.cwe_id}: {pattern.razon}")
+
+    if team_profile.custom_exceptions:
+        lines.append("Excepciones adicionales:")
+        for exc in team_profile.custom_exceptions:
+            lines.append(f"- {exc}")
+
+    lines.append(f"Severidad mínima de reporte: {team_profile.min_severity.value}")
+    lines.append(
+        "\nConsidera estas convenciones al evaluar si el hallazgo es realmente "
+        "explotable en el contexto de este equipo."
+    )
+
+    return "\n".join(lines)
+
+
+def _build_user_prompt(
+    finding: CandidateFinding,
+    kb_context: list[KBFragment],
+    team_profile: TeamProfile | None = None,
+) -> str:
+    """Construye el prompt USER con el finding, perfil del equipo y contexto KB.
+
+    El orden de secciones es:
+      1. Hallazgo candidato
+      2. Perfil del Equipo  (solo si team_profile tiene contenido)
+      3. Contexto de la Base de Conocimiento  (solo si kb_context no está vacío)
+      4. Instrucción final
+    """
     parts: list[str] = []
 
+    # --- 1. Hallazgo ---
     parts.append("## Hallazgo Candidato\n")
     parts.append(f"- **ID:** {finding.finding_id}")
     parts.append(f"- **Tipo:** {finding.tipo_vulnerabilidad}")
@@ -77,6 +133,13 @@ def _build_user_prompt(finding: CandidateFinding, kb_context: list[KBFragment]) 
     parts.append(f"- **Patron detectado:** {finding.patron_detectado}")
     parts.append(f"\n### Fragmento de codigo\n```\n{finding.fragmento_codigo}\n```")
 
+    # --- 2. Perfil del equipo (opcional) ---
+    if team_profile is not None:
+        profile_section = _build_team_profile_section(team_profile)
+        if profile_section:
+            parts.append(f"\n{profile_section}")
+
+    # --- 3. Contexto KB (opcional) ---
     if kb_context:
         parts.append("\n## Contexto de la Base de Conocimiento\n")
         for i, fragment in enumerate(kb_context, 1):
@@ -88,6 +151,7 @@ def _build_user_prompt(finding: CandidateFinding, kb_context: list[KBFragment]) 
             parts.append(f"Fuente: {fragment.fuente}\n")
             parts.append(f"{fragment.contenido}\n")
 
+    # --- 4. Instrucción final ---
     parts.append(
         "\nEvalua si este hallazgo es realmente explotable y responde con el JSON."
     )
@@ -199,14 +263,25 @@ class BedrockAdapter(LLMReasoningPort):
         self._temperature = temperature
         self._client = boto3.client("bedrock-runtime", region_name=region)
 
-    async def evaluate_finding(self, finding: CandidateFinding, kb_context: list[KBFragment]) -> LLMVerdict:
+    async def evaluate_finding(
+        self,
+        finding: CandidateFinding,
+        kb_context: list[KBFragment],
+        team_profile: TeamProfile | None = None,
+    ) -> LLMVerdict:
         """Evalua un hallazgo candidato usando Bedrock Converse API.
 
         Implementa reintentos con backoff exponencial (5s, 10s, 20s) en
         ThrottlingException y ServiceUnavailableException. Retorna veredicto
         'no_evaluado' en fallo definitivo o JSON invalido.
+
+        Args:
+            finding: Hallazgo candidato a evaluar.
+            kb_context: Fragmentos de la base de conocimiento como contexto.
+            team_profile: Perfil del equipo. Cuando tiene contenido se inyecta
+                          la sección '## Perfil del Equipo' en el prompt USER.
         """
-        user_prompt = _build_user_prompt(finding, kb_context)
+        user_prompt = _build_user_prompt(finding, kb_context, team_profile)
 
         messages = [
             {

@@ -132,6 +132,7 @@ class AppConfig(BaseSettings):
         yaml_file="config.yaml",
         env_prefix="",
         case_sensitive=False,
+        extra="ignore",
     )
 
     @model_validator(mode="after")
