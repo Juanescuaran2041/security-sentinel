@@ -6,7 +6,7 @@ usando un modelo de lenguaje (Bedrock o Anthropic).
 
 from abc import ABC, abstractmethod
 
-from security_pr_guardian.core.models import CandidateFinding, KBFragment, LLMVerdict
+from security_pr_guardian.core.models import CandidateFinding, KBFragment, LLMVerdict, TeamProfile
 
 
 class LLMReasoningPort(ABC):
@@ -20,7 +20,8 @@ class LLMReasoningPort(ABC):
 
     @abstractmethod
     async def evaluate_finding(
-        self, finding: CandidateFinding, kb_context: list[KBFragment]
+        self, finding: CandidateFinding, kb_context: list[KBFragment],
+        team_profile: TeamProfile | None = None
     ) -> LLMVerdict:
         """Evalua un hallazgo candidato usando razonamiento LLM.
 

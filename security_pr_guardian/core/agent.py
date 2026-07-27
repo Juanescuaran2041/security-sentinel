@@ -6,6 +6,7 @@ import asyncio
 from datetime import datetime, timezone
 
 from security_pr_guardian.core.logger import StructuredLogger
+from security_pr_guardian.core.team_profile import TeamProfileLoader
 
 from security_pr_guardian.core.models import (
     AnalysisResult,
@@ -17,6 +18,7 @@ from security_pr_guardian.core.models import (
     Recommendation,
     Severity,
     SEVERITY_ORDER,
+    TeamProfile,
 )
 
 from security_pr_guardian.core.diff_parser import DiffParser
@@ -42,6 +44,7 @@ class SecurityAgent:
         llm_reasoning_port: LLMReasoningPort,
         pr_comment_port: PRCommentPort,
         logger: StructuredLogger | None = None,
+        team_profile: TeamProfile | None = None,
     ):
 
         self.config = config
@@ -51,7 +54,7 @@ class SecurityAgent:
         self.kb_retrieval_port = kb_retrieval_port
         self.llm_reasoning_port = llm_reasoning_port
         self.pr_comment_port = pr_comment_port
-
+        self.team_profile = team_profile
 
         self.logger = logger
 
@@ -167,7 +170,9 @@ class SecurityAgent:
 
             #try llm veredict
             try:
-                veredict = await self.llm_reasoning_port.evaluate_finding(candidate, kb_frags)
+                veredict = await self.llm_reasoning_port.evaluate_finding(
+                    candidate, kb_frags, self.team_profile
+                )
                 disposition = "incluido" if veredict.es_explotable else "descartado"
                 severidad = veredict.severidad_ajustada
                 justificacion = veredict.justificacion
