@@ -198,3 +198,20 @@ class ErrorFinding(BaseModel):
     version: str
     ecosistema: str
     error_descripcion: str
+
+
+class AllowedPattern(BaseModel):
+    """Patron CWE permitido con justificacion de uso legitimo."""
+
+    cwe_id: str   # formato "CWE-<número>"
+    razon: str    # descripción del uso legítimo
+
+
+class TeamProfile(BaseModel):
+    """Perfil del equipo para personalizar el analisis de seguridad."""
+
+    frameworks: list[str] = []                   # ej. ["django", "react", "fastapi"]
+    auth_libraries: list[str] = []               # ej. ["bcrypt", "django-allauth"]
+    allowed_patterns: list[AllowedPattern] = []  # patrones CWE permitidos con razón
+    min_severity: Severity = Severity.LOW        # severidad mínima a reportar
+    custom_exceptions: list[str] = []            # texto libre de convenciones del equipo
