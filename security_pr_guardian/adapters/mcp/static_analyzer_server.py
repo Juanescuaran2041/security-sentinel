@@ -10,8 +10,6 @@ Requisitos cubiertos:
   - errores_parciales incluye errores por archivo detectados por PatternEngine.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
