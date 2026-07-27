@@ -16,7 +16,7 @@ import httpx
 from jinja2 import Environment, FileSystemLoader
 
 from security_pr_guardian.core.logger import StructuredLogger
-from security_pr_guardian.core.models import AnalysisResult, ConfirmedFinding
+from security_pr_guardian.core.models import AnalysisResult
 from security_pr_guardian.ports.pr_comment import PRCommentPort
 
 
@@ -37,6 +37,7 @@ _TEMPLATES_DIR = Path(__file__).parent.parent.parent / "templates"
 
 _BASE_URL = "https://api.github.com"
 
+
 class GitHubPRCommenterAdapter(PRCommentPort):
     """Adaptador que publica el comentario de seguridad en un PR de GitHub.
 
@@ -47,18 +48,15 @@ class GitHubPRCommenterAdapter(PRCommentPort):
     ----------
     token : str
         Token de autenticación GitHub (GITHUB_TOKEN).
-    logger : StructuredLogger
-        Logger estructurado para emitir eventos.
-    analysis_result : AnalysisResult
-        Resultado completo del análisis (necesario para renderizar la plantilla).
+    logger : StructuredLogger | None
+        Logger estructurado para emitir eventos. Puede ser None en tests.
     base_url : str
         URL base de la API de GitHub. Default: https://api.github.com.
     """
 
-    def __init__(self,token: str, logger: StructuredLogger, analysis_result: AnalysisResult, base_url: str = _BASE_URL):
+    def __init__(self, token: str, logger: StructuredLogger | None, base_url: str = _BASE_URL):
         self._token = token
         self._logger = logger
-        self._result = analysis_result
         self._base_url = base_url.rstrip("/")
         # Configurar el entorno Jinja2 apuntando al directorio de plantillas
         self._jinja_env = Environment(
@@ -70,7 +68,7 @@ class GitHubPRCommenterAdapter(PRCommentPort):
     # Puerto principal
     # ------------------------------------------------------------------
 
-    async def post_or_update_comment(self, repo: str, pr_number: int, findings: list[ConfirmedFinding]) -> str:
+    async def post_or_update_comment(self, repo: str, pr_number: int, result: AnalysisResult) -> str:
         """Publica o actualiza el comentario de seguridad en el PR.
 
         Flujo:
@@ -83,22 +81,22 @@ class GitHubPRCommenterAdapter(PRCommentPort):
         Args:
             repo: 'owner/repo'
             pr_number: Número del PR.
-            findings: Lista de hallazgos confirmados.
+            result: Resultado completo del análisis a publicar.
 
         Returns:
             comment_id como string.
         """
         # Paso 1: renderizar la plantilla
-        body = self._render_comment()
+        body = self._render_comment(result)
 
         # Paso 2: buscar comentario existente con la marca de agua
         existing_comment_id = await self._find_existing_comment(repo, pr_number)
 
         # Paso 3: POST o PATCH
         if existing_comment_id:
-            comment_id = await self._update_comment(repo, existing_comment_id, body)
+            comment_id = await self._update_comment(repo, existing_comment_id, body, result.analysis_id)
         else:
-            comment_id = await self._create_comment(repo, pr_number, body)
+            comment_id = await self._create_comment(repo, pr_number, body, result.analysis_id)
 
         return comment_id
 
@@ -106,14 +104,17 @@ class GitHubPRCommenterAdapter(PRCommentPort):
     # Renderizado de la plantilla
     # ------------------------------------------------------------------
 
-    def _render_comment(self) -> str:
+    def _render_comment(self, result: AnalysisResult) -> str:
         """Renderiza `pr_comment.md.j2` con el resultado del análisis.
+
+        Args:
+            result: Resultado completo del análisis.
 
         Returns:
             El cuerpo del comentario en formato Markdown.
         """
         template = self._jinja_env.get_template("pr_comment.md.j2")
-        return template.render(result=self._result)
+        return template.render(result=result)
 
     # ------------------------------------------------------------------
     # Búsqueda de comentario existente
@@ -168,7 +169,7 @@ class GitHubPRCommenterAdapter(PRCommentPort):
     # Creación de comentario (POST)
     # ------------------------------------------------------------------
 
-    async def _create_comment(self, repo: str, pr_number: int, body: str) -> str:
+    async def _create_comment(self, repo: str, pr_number: int, body: str, analysis_id: str) -> str:
         """Crea un comentario nuevo en el PR.
 
         Endpoint: POST /repos/{owner}/{repo}/issues/{pr_number}/comments
@@ -181,25 +182,18 @@ class GitHubPRCommenterAdapter(PRCommentPort):
             repo: 'owner/repo'
             pr_number: Número del PR.
             body: Cuerpo del comentario en Markdown.
+            analysis_id: UUID del análisis actual para el log.
 
         Returns:
             comment_id como string.
 
         Raises:
             RuntimeError: Si todos los reintentos se agotan.
-
-        TODO: Implementar la llamada HTTP con reintentos.
-              Fíjate en cómo lo hace GitHubDiffAdapter._retry_request
-              para seguir el mismo patrón (bucle for + asyncio.sleep).
-              En éxito retornar str(response.json()["id"]).
-              En fallo definitivo emitir evento `comment_publish_failed`
-              con los campos: analysis_id, http_status, attempts.
         """
         async with httpx.AsyncClient() as client:
             url = f"{self._base_url}/repos/{repo}/issues/{pr_number}/comments"
             headers = self._auth_headers()
             payload = {"body": body}
-            attempt = 0
 
             lasts_status = None
 
@@ -215,14 +209,14 @@ class GitHubPRCommenterAdapter(PRCommentPort):
 
                 if attempt < _MAX_RETRIES - 1:
                     await asyncio.sleep(_RETRY_DELAYS[attempt])
-            
-            self._logger.log(
-                componente="GitHubPRCommenterAdapter",
-                evento= "comment_publish_failed",
-                analysis_id=self._result.analysis_id,
-                http_status=lasts_status,
-                attempts=_MAX_RETRIES,
-            )
+
+            if self._logger:
+                self._logger.log(
+                    componente="GitHubPRCommenterAdapter",
+                    evento="comment_publish_failed",
+                    http_status=lasts_status,
+                    attempts=_MAX_RETRIES,
+                )
             raise RuntimeError("Failed to publish comment after all retries.")
             
                     
@@ -233,7 +227,7 @@ class GitHubPRCommenterAdapter(PRCommentPort):
     # Actualización de comentario (PATCH)
     # ------------------------------------------------------------------
 
-    async def _update_comment(self, repo: str, comment_id: str, body: str) -> str:
+    async def _update_comment(self, repo: str, comment_id: str, body: str, analysis_id: str) -> str:
         """Actualiza un comentario existente en el PR.
 
         Endpoint: PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}
@@ -245,24 +239,19 @@ class GitHubPRCommenterAdapter(PRCommentPort):
             repo: 'owner/repo'
             comment_id: ID del comentario a actualizar.
             body: Nuevo cuerpo del comentario en Markdown.
+            analysis_id: UUID del análisis actual para el log.
 
         Returns:
             comment_id como string (el mismo que recibió).
 
         Raises:
             RuntimeError: Si todos los reintentos se agotan.
-
-        TODO: Implementar igual que _create_comment pero con PATCH.
-              Endpoint distinto: /repos/{owner}/{repo}/issues/comments/{comment_id}
-              En éxito retornar comment_id (ya lo tienes, no cambia).
         """
-        
         async with httpx.AsyncClient() as client:
             url = f"{self._base_url}/repos/{repo}/issues/comments/{comment_id}"
             headers = self._auth_headers()
             payload = {"body": body}
-            
-            attempt = 0
+
             lasts_status = None
 
             for attempt in range(_MAX_RETRIES):
@@ -278,14 +267,13 @@ class GitHubPRCommenterAdapter(PRCommentPort):
                 if attempt < _MAX_RETRIES - 1:
                     await asyncio.sleep(_RETRY_DELAYS[attempt])
 
-            self._logger.log(
-                componente="GitHubPRCommenterAdapter",
-                evento= "comment_publish_failed",
-                analysis_id=self._result.analysis_id,
-                http_status=lasts_status,
-                attempts=_MAX_RETRIES,
-            )
-
+            if self._logger:
+                self._logger.log(
+                    componente="GitHubPRCommenterAdapter",
+                    evento="comment_publish_failed",
+                    http_status=lasts_status,
+                    attempts=_MAX_RETRIES,
+                )
             raise RuntimeError("Failed to update comment after all retries.")
 
     # ------------------------------------------------------------------

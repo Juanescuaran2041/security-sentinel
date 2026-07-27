@@ -70,18 +70,18 @@ def make_finding(
     )
 
 
-def make_adapter(
+def make_result(
     findings: list[ConfirmedFinding],
     diff_truncated: bool = False,
     candidate_count: int = 5,
     discarded_count: int = 2,
     timestamp: datetime | None = None,
-) -> GitHubPRCommenterAdapter:
-    """Crea un adaptador con el AnalysisResult configurado para los tests."""
+) -> AnalysisResult:
+    """Crea un AnalysisResult con los datos de prueba."""
     if timestamp is None:
         timestamp = datetime(2024, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
 
-    result = AnalysisResult(
+    return AnalysisResult(
         repo=REPO,
         pr_number=PR_NUMBER,
         candidate_count=candidate_count,
@@ -96,11 +96,11 @@ def make_adapter(
         guardian_version="0.1.0",
         timestamp_utc=timestamp,
     )
-    return GitHubPRCommenterAdapter(
-        token="ghp_test",
-        logger=None,
-        analysis_result=result,
-    )
+
+
+def make_adapter() -> GitHubPRCommenterAdapter:
+    """Crea un adaptador listo para tests (sin analysis_result en el constructor)."""
+    return GitHubPRCommenterAdapter(token="ghp_test", logger=None)
 
 
 # ---------------------------------------------------------------------------
@@ -114,8 +114,9 @@ def test_mandatory_sections_present():
     CUANDO: se renderiza la plantilla.
     ENTONCES: el comentario contiene todas las secciones obligatorias.
     """
-    adapter = make_adapter([make_finding(Severity.HIGH)])
-    output = adapter._render_comment()
+    adapter = make_adapter()
+    result = make_result([make_finding(Severity.HIGH)])
+    output = adapter._render_comment(result)
 
     assert WATERMARK in output
     assert "Resumen Ejecutivo" in output
@@ -141,8 +142,9 @@ def test_findings_ordered_by_severity_descending():
         make_finding(Severity.MEDIUM, tipo="Injection Medium", linea=2),
         make_finding(Severity.LOW, tipo="Injection Low", linea=3),
     ]
-    adapter = make_adapter(findings)
-    output = adapter._render_comment()
+    adapter = make_adapter()
+    result = make_result(findings)
+    output = adapter._render_comment(result)
 
     assert output.index("CRITICAL") < output.index("MEDIUM") < output.index("LOW")
 
@@ -162,8 +164,9 @@ def test_no_vulnerabilities_message_when_no_findings():
       - Aparece el timestamp en formato ISO 8601 UTC.
       - NO aparece la tabla de hallazgos.
     """
-    adapter = make_adapter(findings=[], candidate_count=5, discarded_count=5)
-    output = adapter._render_comment()
+    adapter = make_adapter()
+    result = make_result(findings=[], candidate_count=5, discarded_count=5)
+    output = adapter._render_comment(result)
 
     assert "Sin Vulnerabilidades Detectadas" in output
     assert "Tabla de Hallazgos" not in output
@@ -183,16 +186,18 @@ def test_truncation_warning_visible_when_diff_truncated():
     CUANDO: se renderiza la plantilla.
     ENTONCES: el bloque de advertencia de truncación aparece en el output.
     """
-    adapter_truncated = make_adapter(
+    adapter = make_adapter()
+
+    result_truncated = make_result(
         findings=[make_finding(Severity.LOW)],
         diff_truncated=True,
     )
-    output_truncated = adapter_truncated._render_comment()
+    output_truncated = adapter._render_comment(result_truncated)
     assert "Advertencia: diff truncado" in output_truncated
 
-    adapter_not_truncated = make_adapter(
+    result_not_truncated = make_result(
         findings=[make_finding(Severity.LOW)],
         diff_truncated=False,
     )
-    output_not_truncated = adapter_not_truncated._render_comment()
+    output_not_truncated = adapter._render_comment(result_not_truncated)
     assert "Advertencia: diff truncado" not in output_not_truncated
