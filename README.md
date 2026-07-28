@@ -10,9 +10,13 @@ Herramienta CLI y GitHub Action que analiza Pull Requests combinando **SAST** (a
 
 ## Instalación
 
+El paquete está publicado en PyPI. Instálalo con:
+
 ```bash
 pip install security-pr-guardian
 ```
+
+> Requiere Python 3.11 o superior.
 
 ## Configuración
 
