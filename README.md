@@ -2,6 +2,8 @@
 
 Herramienta CLI y GitHub Action que analiza Pull Requests combinando **SAST** (análisis estático con regex sobre 7 CWEs), **escaneo de CVEs** vía OSV.dev, **RAG** sobre una base de conocimiento OWASP/CWE, y **razonamiento LLM** vía Amazon Bedrock para filtrar falsos positivos antes de publicar un comentario estructurado en el PR.
 
+### Clonar el repositorio para un mejor resultado
+
 ## Requisitos previos
 
 - Python 3.11+
