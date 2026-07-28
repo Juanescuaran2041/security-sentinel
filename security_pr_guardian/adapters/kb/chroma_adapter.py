@@ -153,8 +153,8 @@ class ChromaKBAdapter(KBRetrievalPort):
             # ID único: usar la ruta relativa
             doc_id = fuente.replace("/", "_").replace("\\", "_").replace(".md", "")
 
-            # Generar embedding
-            embedding = list(self._model.encode(contenido))
+            # Generar embedding — convertir a float nativo para compatibilidad con ChromaDB
+            embedding = [float(x) for x in self._model.encode(contenido)]
 
             documents.append(contenido)
             embeddings.append(embedding)
@@ -270,7 +270,7 @@ class ChromaKBAdapter(KBRetrievalPort):
         # Generar embedding de la query en thread pool (CPU-bound)
         query_embedding = await loop.run_in_executor(
             None,
-            lambda: list(self._model.encode(query_text)),
+            lambda: [float(x) for x in self._model.encode(query_text)],
         )
 
         # Limitar top_k al número de documentos disponibles

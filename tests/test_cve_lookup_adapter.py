@@ -194,3 +194,32 @@ async def test_empty_list_when_no_vulnerabilities(mcp_session, single_dependency
     results = await adapter.lookup_vulnerabilities(single_dependency)
 
     assert len(results) == 0
+
+
+# ---------------------------------------------------------------------------
+# Test 5: mcp_session=None — guard para sesión MCP nula (MVP mode)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_returns_empty_list_when_mcp_session_is_none(single_dependency):
+    """
+    DADO: el adaptador se instancia con mcp_session=None (MVP mode, como en main.py).
+    CUANDO: se llama a lookup_vulnerabilities con cualquier lista de dependencias.
+    ENTONCES: retorna [] sin lanzar excepciones (early return antes de call_tool).
+    """
+    adapter = CVELookUpAdapter(mcp_session=None)
+    results = await adapter.lookup_vulnerabilities(single_dependency)
+    assert results == []
+
+
+@pytest.mark.asyncio
+async def test_returns_empty_list_when_mcp_session_is_none_many_deps(many_dependencies):
+    """
+    DADO: mcp_session=None y una lista grande de dependencias.
+    CUANDO: se llama a lookup_vulnerabilities.
+    ENTONCES: retorna [] (no intenta iterar ni llamar a call_tool).
+    """
+    adapter = CVELookUpAdapter(mcp_session=None)
+    results = await adapter.lookup_vulnerabilities(many_dependencies)
+    assert results == []

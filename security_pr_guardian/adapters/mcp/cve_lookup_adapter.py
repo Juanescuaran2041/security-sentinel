@@ -17,7 +17,11 @@ class CVELookUpAdapter(CVELookupPort):
         self._mcp_session = mcp_session
         self.max_dependencies = max_dependencies
 
-    async def lookup_vulnerabilities(self, packages: list[DependencyChange] ) -> list[CVEFinding | ErrorFinding]:
+    async def lookup_vulnerabilities(self, packages: list[DependencyChange]) -> list[CVEFinding | ErrorFinding]:
+        # Guard: MCP session not configured (e.g. MVP mode where mcp_session=None)
+        if self._mcp_session is None:
+            return []
+
         limited = packages[: self.max_dependencies]
         omitted = len(packages) - len(limited)
 
