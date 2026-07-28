@@ -16,7 +16,11 @@ El paquete está publicado en PyPI. Instálalo con:
 pip install security-pr-guardian
 ```
 
-> Requiere Python 3.11 o superior.
+> **Requiere Python 3.11, 3.12 o 3.13.** Python 3.14 no está soportado aún debido a incompatibilidades con dependencias nativas (`tokenizers`). Si tienes múltiples versiones de Python instaladas, usa:
+>
+> ```bash
+> py -3.13 -m pip install security-pr-guardian
+> ```
 
 ## Configuración
 
