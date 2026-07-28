@@ -1,0 +1,50 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # Required for Trusted Publishers (PyPI OIDC)
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Verify package
+        run: |
+          pip install twine
+          twine check dist/*
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # ───────────────────────────────────────────────────────────
+        # OPCIÓN A — Trusted Publishers (recomendada, sin secretos):
+        #   1. Ve a https://pypi.org/manage/account/publishing/
+        #   2. Agrega este repo como "Trusted Publisher" para el paquete
+        #      - Owner: <TU_USUARIO_U_ORG>
+        #      - Repository: security-sentinel
+        #      - Workflow: publish.yml
+        #      - Environment: pypi
+        #   3. No necesitas configurar nada más, el OIDC token se genera solo.
+        #
+        # OPCIÓN B — Token manual:
+        #   Si prefieres usar un token API clásico, comenta la línea
+        #   "id-token: write" arriba y descomenta lo siguiente:
+        #
+        # with:
+        #   password: ${{ secrets.PYPI_API_TOKEN }}
+        # ───────────────────────────────────────────────────────────
