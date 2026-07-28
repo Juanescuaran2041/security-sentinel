@@ -35,7 +35,7 @@ from security_pr_guardian.ports.llm_reasoning import LLMReasoningPort
 from security_pr_guardian.ports.pr_comment import PRCommentPort
 from security_pr_guardian.ports.static_analysis import StaticAnalysisPort
 
-MAX_FINDINGS_LLM = 20
+MAX_FINDINGS_LLM = 60
 
 
 class SecurityAgent:
